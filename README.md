@@ -103,14 +103,30 @@ Library-Management-System/
 
 ## 🚀 How to Run Locally
 
+### Recommended (Native SQL Engine - Zero Setup)
 1. Open your terminal in the project root directory:
    ```bash
-   php -S localhost:8000
+   npm start
    ```
+   *(or `node server.js`)*
+
 2. Open your browser and navigate to:
    ```
-   http://localhost:8000
+   http://localhost:3000
    ```
+   * **Home Page:** [http://localhost:3000](http://localhost:3000)
+   * **Login / Signup:** [http://localhost:3000/Pages/login.html](http://localhost:3000/Pages/login.html)
+   * **Admin Dashboard:** [http://localhost:3000/Pages/admin-dashboard.html](http://localhost:3000/Pages/admin-dashboard.html)
+   * **Student Dashboard:** [http://localhost:3000/Pages/student-dashboard.html](http://localhost:3000/Pages/student-dashboard.html)
+
+> 💡 **Real-Time SQL Sync:** All student book checkout transactions, new registrations, and returns are stored in `library.db` and immediately updated across the Admin Panel and Student Portal in real-time.
+
+### Alternative (PHP / Apache / XAMPP)
+If you prefer running via a PHP server:
+```bash
+php -S localhost:8000
+```
+Navigate to `http://localhost:8000`.
 
 ---
 

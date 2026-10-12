@@ -4,6 +4,7 @@
   "description": "A modern, responsive, and robust Smart Library Management System built with HTML5, CSS3, JavaScript, PHP 8.x, and Relational SQL Database (PDO MySQL / SQLite).",
   "main": "index.php",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

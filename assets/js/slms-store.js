@@ -375,6 +375,80 @@
     if (!localStorage.getItem(STORAGE_KEYS.MESSAGES)) {
       localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(DEFAULT_MESSAGES));
     }
+
+    // Connect to SQL Backend
+    syncWithBackend();
+    if (!window._slms_sync_interval) {
+      window._slms_sync_interval = setInterval(syncWithBackend, 3500);
+    }
+  }
+
+  // Live Sync with SQL Backend
+  async function syncWithBackend() {
+    try {
+      const res = await fetch('/api/health');
+      if (!res.ok) return;
+      SLMS_STORE.isSqlConnected = true;
+
+      // 1. Sync Books from SQL
+      const bRes = await fetch('/api/books');
+      if (bRes.ok) {
+        const bData = await bRes.json();
+        if (bData.status && Array.isArray(bData.data) && bData.data.length > 0) {
+          const mappedBooks = bData.data.map(b => ({
+            id: b.id,
+            title: b.title,
+            author: b.author,
+            category: b.category,
+            isbn: b.isbn,
+            totalCopies: b.total_copies ?? b.totalCopies ?? 1,
+            availableCopies: b.available_copies ?? b.availableCopies ?? 1,
+            image: b.image || '../assets/images/b1.jpg',
+            description: b.description || ''
+          }));
+          localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(mappedBooks));
+        }
+      }
+
+      // 2. Sync Circulations from SQL
+      const cRes = await fetch('/api/circulation/all');
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        if (cData.status && Array.isArray(cData.data)) {
+          localStorage.setItem(STORAGE_KEYS.CIRCULATIONS, JSON.stringify(cData.data));
+        }
+      }
+
+      // 3. Sync Students from SQL
+      const uRes = await fetch('/api/users/students');
+      if (uRes.ok) {
+        const uData = await uRes.json();
+        if (uData.status && Array.isArray(uData.data)) {
+          let currentUsers = getRaw(STORAGE_KEYS.USERS, DEFAULT_USERS);
+          uData.data.forEach(dbStu => {
+            const idx = currentUsers.findIndex(u => (u.studentId && u.studentId.toUpperCase() === dbStu.studentId.toUpperCase()));
+            if (idx === -1) {
+              currentUsers.push({
+                id: dbStu.id,
+                studentId: dbStu.studentId,
+                name: dbStu.name,
+                email: dbStu.email,
+                role: 'student',
+                status: 'Active'
+              });
+            } else {
+              currentUsers[idx].name = dbStu.name;
+              currentUsers[idx].email = dbStu.email;
+            }
+          });
+          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(currentUsers));
+        }
+      }
+
+      notifyChange();
+    } catch (e) {
+      SLMS_STORE.isSqlConnected = false;
+    }
   }
 
   // Trigger reactive update across window
@@ -399,6 +473,8 @@
 
   // ================= DATA STORE API =================
   const SLMS_STORE = {
+    isSqlConnected: false,
+    syncNow: syncWithBackend,
     init: initStore,
 
     // --- BOOKS ---
@@ -427,6 +503,14 @@
       };
       books.unshift(newBook);
       setRaw(STORAGE_KEYS.BOOKS, books);
+
+      // Async SQL push
+      fetch('/api/books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBook)
+      }).then(() => syncWithBackend()).catch(() => {});
+
       return newBook;
     },
 
@@ -445,6 +529,13 @@
       let books = this.getBooks();
       books = books.filter(b => b.isbn !== isbn);
       setRaw(STORAGE_KEYS.BOOKS, books);
+
+      // Async SQL push
+      fetch('/api/books', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isbn })
+      }).then(() => syncWithBackend()).catch(() => {});
     },
 
     // --- USERS / STUDENTS ---
@@ -484,6 +575,14 @@
       };
       users.push(newStu);
       setRaw(STORAGE_KEYS.USERS, users);
+
+      // Async SQL push
+      fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStu)
+      }).then(() => syncWithBackend()).catch(() => {});
+
       return { success: true, student: newStu };
     },
 
@@ -563,6 +662,18 @@
       circulations.unshift(newCirc);
       setRaw(STORAGE_KEYS.CIRCULATIONS, circulations);
 
+      // Async SQL push
+      fetch('/api/circulation/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: stu.studentId,
+          student_name: stu.name,
+          isbn: book.isbn,
+          dueDate: formattedDue
+        })
+      }).then(() => syncWithBackend()).catch(() => {});
+
       return {
         success: true,
         circulation: newCirc,
@@ -596,6 +707,14 @@
       }
 
       notifyChange();
+
+      // Async SQL push
+      fetch('/api/circulation/return', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issue_id: circ.id })
+      }).then(() => syncWithBackend()).catch(() => {});
+
       return { success: true, message: `Book "${circ.bookTitle}" marked as Returned for ${circ.studentName}.` };
     },
 
