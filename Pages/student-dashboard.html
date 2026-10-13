@@ -9,7 +9,6 @@
 </head>
 <body>
 
-  <!-- ================= HEADER ================= -->
   <header class="main-header">
     <div class="container header-flex">
       <div class="logo">
@@ -32,7 +31,6 @@
   </div>
 </header>
 
-<!-- ================= DASHBOARD CONTENT ================= -->
 <div class="dashboard-container">
   <div class="dashboard-header">
     <div>
@@ -44,7 +42,6 @@
     </div>
   </div>
 
-  <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card">
       <h4>Books Currently Borrowed</h4>
@@ -64,7 +61,6 @@
     </div>
   </div>
 
-  <!-- Active Borrowed Books Section -->
   <div class="dashboard-section">
     <h2>Currently Issued Books</h2>
     <table class="custom-table">
@@ -79,7 +75,7 @@
         </tr>
       </thead>
       <tbody id="studentIssuedBody">
-        <!-- Dynamically rendered -->
+
       </tbody>
     </table>
     <div id="noIssuedMsg" style="display: none; padding: 20px; text-align: center; color: #777;">
@@ -87,7 +83,6 @@
     </div>
   </div>
 
-  <!-- Borrowing History Section -->
   <div class="dashboard-section">
     <h2>My Borrowing History</h2>
     <table class="custom-table">
@@ -101,7 +96,7 @@
         </tr>
       </thead>
       <tbody id="studentHistoryBody">
-        <!-- Dynamically rendered -->
+
       </tbody>
     </table>
     <div id="noHistoryMsg" style="display: none; padding: 20px; text-align: center; color: #777;">
@@ -110,7 +105,6 @@
   </div>
 </div>
 
-<!-- ================= FOOTER ================= -->
 <footer class="main-footer">
   <div class="container footer-grid">
     <div>
@@ -149,8 +143,7 @@
 
   function initStudentDashboard() {
     const user = getCurrentUser();
-    
-    // Protect Student Dashboard: Redirect guests to login
+
     if (!user) {
       alert('Please log in with your Student ID to access your dashboard.');
       window.location.href = 'login.html?redirect=student-dashboard.html';
@@ -198,14 +191,12 @@
     const activeBorrows = window.SLMS_STORE.getStudentActiveBorrows(stuId);
     const historyBorrows = window.SLMS_STORE.getStudentHistory(stuId);
 
-    // Update Stats
     document.getElementById('statBorrowedCount').innerText = activeBorrows.length;
     document.getElementById('statReturnedCount').innerText = historyBorrows.length;
 
     const totalFines = activeBorrows.reduce((acc, c) => acc + (c.fine || 0), 0);
     document.getElementById('statFineCount').innerText = `₹${totalFines.toFixed(2)}`;
 
-    // Render Active Issued Books
     const tbody = document.getElementById('studentIssuedBody');
     const noMsg = document.getElementById('noIssuedMsg');
     tbody.innerHTML = '';
@@ -231,7 +222,6 @@
       });
     }
 
-    // Render Return History
     const historyTbody = document.getElementById('studentHistoryBody');
     const noHistoryMsg = document.getElementById('noHistoryMsg');
     historyTbody.innerHTML = '';
@@ -262,7 +252,6 @@
     }
   }
 
-  // Reactive listener for data updates across tabs or admin actions
   window.addEventListener('slms_data_changed', () => {
     if (currentStudentId) {
       loadStudentBorrows(currentStudentId);

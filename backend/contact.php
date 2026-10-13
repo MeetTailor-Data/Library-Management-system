@@ -1,8 +1,4 @@
 <?php
-/**
- * Smart Library Management System - Contact Form Controller (SQL PDO)
- * Saves incoming contact queries into SQL messages table.
- */
 
 require_once __DIR__ . '/db.php';
 
@@ -39,7 +35,7 @@ if ($action === 'submit') {
     $db = get_db();
     $stmt = $db->query("SELECT * FROM messages ORDER BY id DESC");
     $messages = $stmt->fetchAll();
-    
+
     foreach ($messages as &$m) {
         $m['id'] = (int)$m['id'];
     }

@@ -37,14 +37,12 @@
     <h2 style="margin-top: 30px; margin-bottom: 10px;">Library Book Catalog</h2>
     <p style="text-align: center; color: #666; margin-bottom: 25px;">Search, explore, and find books available in our collection</p>
 
-    <!-- Search & Filter Controls -->
     <div class="search-container">
       <div class="search-box-flex">
         <input type="text" id="search-input" placeholder="Search by book title, author, or ISBN...">
         <button type="button" id="search-button" onclick="filterBooks()">Search</button>
       </div>
 
-      <!-- Category Filter Pills -->
       <div class="category-filters">
         <button class="filter-btn active" onclick="setCategory('All', this)">All</button>
         <button class="filter-btn" onclick="setCategory('Economics', this)">Economics</button>
@@ -55,9 +53,8 @@
       </div>
     </div>
 
-    <!-- Books Grid -->
     <div class="book-container" id="bookGrid">
-      <!-- Dynamically rendered from SLMS_STORE -->
+
     </div>
 
     <div id="noResults" style="display: none; text-align: center; padding: 40px; color: #777;">
@@ -67,7 +64,6 @@
   </div>
 </main>
 
-<!-- Book Details Modal -->
 <div class="modal-overlay" id="bookModal" onclick="if(event.target === this) closeBookModal()">
   <div class="modal-card">
     <button class="modal-close" onclick="closeBookModal()">&times;</button>
@@ -246,7 +242,6 @@
     document.getElementById('bookModal').classList.remove('active');
   }
 
-  // Reactive listener for data updates across tabs
   window.addEventListener('slms_data_changed', renderCatalogBooks);
 
   document.addEventListener('DOMContentLoaded', () => {

@@ -1,15 +1,9 @@
-/**
- * Smart Library Management System - Session & Auth Manager
- * Handles login state, guest browsing, role-based navigation, and book borrowing across all pages.
- */
-
-// Retrieve current logged in user from localStorage
 function getCurrentUser() {
   const userJson = localStorage.getItem('slms_user');
   if (userJson) {
     try {
       let user = JSON.parse(userJson);
-      // Auto-heal placeholder names using store if available
+
       if (user && user.role === 'student' && user.studentId) {
         if (!user.name || user.name.toLowerCase().startsWith('student stu') || user.name.toUpperCase() === user.studentId.toUpperCase()) {
           if (window.SLMS_STORE) {
@@ -29,19 +23,16 @@ function getCurrentUser() {
   return null;
 }
 
-// Save user session
 function setCurrentUser(user) {
   localStorage.setItem('slms_user', JSON.stringify(user));
 }
 
-// Logout user and redirect home
 function logoutUser() {
   localStorage.removeItem('slms_user');
   alert('You have logged out successfully.');
   window.location.href = 'index.html';
 }
 
-// Update Top Navbar based on session state across all pages
 function updateNavbarAuth() {
   const user = getCurrentUser();
   const authContainer = document.getElementById('navbarAuthArea');
@@ -50,7 +41,7 @@ function updateNavbarAuth() {
   if (!authContainer && !navList) return;
 
   if (user) {
-    // USER IS LOGGED IN
+
     if (authContainer) {
       if (user.role === 'admin') {
         const onAdminPage = window.location.pathname.includes('admin-dashboard.html');
@@ -64,7 +55,6 @@ function updateNavbarAuth() {
         let stuName = user.name || '';
         const stuId = user.studentId || 'STU101';
 
-        // Check if store has the full real name
         if ((!stuName || stuName.toLowerCase().startsWith('student stu') || stuName.toUpperCase() === stuId.toUpperCase()) && window.SLMS_STORE) {
           const rec = window.SLMS_STORE.getStudentById(stuId);
           if (rec && rec.name && !rec.name.toLowerCase().startsWith('student stu')) {
@@ -74,7 +64,6 @@ function updateNavbarAuth() {
           }
         }
 
-        // Format clean header greeting (e.g., "Meet Tailor (STU105)" or "STU105")
         let displayGreeting = '';
         if (stuName && stuName.toUpperCase() !== stuId.toUpperCase() && !stuName.toLowerCase().startsWith('student stu')) {
           displayGreeting = `${stuName} (${stuId})`;
@@ -90,7 +79,7 @@ function updateNavbarAuth() {
       }
     }
   } else {
-    // GUEST VISITOR
+
     if (authContainer) {
       authContainer.innerHTML = `
         <a href="login.html" class="btn-primary">Sign Up</a>
@@ -99,10 +88,9 @@ function updateNavbarAuth() {
   }
 }
 
-// Borrow book handler (Enforces mandatory student login & centralized circulation)
 function attemptBorrowBook(bookTitle, isbn) {
   const user = getCurrentUser();
-  
+
   if (!user) {
     alert('Login Required: You must log in with your Student ID to borrow books. Redirecting to login page...');
     window.location.href = 'login.html?redirect=catalog.html';
@@ -122,18 +110,16 @@ function attemptBorrowBook(bookTitle, isbn) {
     }
     alert(res.message);
   } else {
-    // Fallback if store is offline
+
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 14);
     const formattedDueDate = dueDate.toLocaleDateString('en-GB');
     alert(`Book Issued Successfully!\n\nBook: "${bookTitle}"\nAssigned Student ID: ${user.studentId}\nReturn Due Date: ${formattedDueDate}`);
   }
-  
-  // Redirect to student dashboard
+
   window.location.href = 'student-dashboard.html';
 }
 
-// Initialize 3-Lines Mobile Hamburger Menu
 function initMobileHamburgerMenu() {
   const headerFlex = document.querySelector('.header-flex');
   const navbar = document.querySelector('.navbar');
@@ -141,7 +127,6 @@ function initMobileHamburgerMenu() {
 
   if (!headerFlex || !navbar) return;
 
-  // Prevent duplicate hamburger button creation
   if (!document.querySelector('.hamburger-btn')) {
     const hamburgerBtn = document.createElement('button');
     hamburgerBtn.className = 'hamburger-btn';
@@ -152,7 +137,6 @@ function initMobileHamburgerMenu() {
       <span></span>
     `;
 
-    // Insert hamburger button right after logo in header
     const logo = headerFlex.querySelector('.logo');
     if (logo) {
       logo.after(hamburgerBtn);
@@ -160,7 +144,6 @@ function initMobileHamburgerMenu() {
       headerFlex.appendChild(hamburgerBtn);
     }
 
-    // Toggle dropdown menu on click
     hamburgerBtn.addEventListener('click', () => {
       hamburgerBtn.classList.toggle('active');
       navbar.classList.toggle('show');
@@ -169,7 +152,6 @@ function initMobileHamburgerMenu() {
       }
     });
 
-    // Close mobile menu when clicking any nav link
     navbar.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         hamburgerBtn.classList.remove('active');
@@ -182,7 +164,6 @@ function initMobileHamburgerMenu() {
   }
 }
 
-// Run initializers on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   updateNavbarAuth();
   initMobileHamburgerMenu();

@@ -9,7 +9,6 @@
 </head>
 <body>
 
-  <!-- ================= HEADER ================= -->
   <header class="main-header">
     <div class="container header-flex">
       <div class="logo">
@@ -31,7 +30,6 @@
     </div>
   </header>
 
-  <!-- ================= DASHBOARD CONTAINER ================= -->
   <div class="dashboard-container">
     <div class="dashboard-header">
       <div>
@@ -44,7 +42,6 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
     <div class="admin-tabs">
       <button class="admin-tab-btn active" onclick="switchTab('overview', this)">Overview</button>
       <button class="admin-tab-btn" onclick="switchTab('inventory', this)">Book Inventory</button>
@@ -53,7 +50,6 @@
       <button class="admin-tab-btn" onclick="switchTab('messages', this)">Contact Messages</button>
     </div>
 
-    <!-- ================= TAB 1: OVERVIEW ================= -->
     <div id="tab-overview" class="tab-content active">
       <div class="stats-grid">
         <div class="stat-card">
@@ -88,13 +84,12 @@
             </tr>
           </thead>
           <tbody id="adminRecentTransBody">
-            <!-- Dynamically rendered -->
+
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ================= TAB 2: INVENTORY ================= -->
     <div id="tab-inventory" class="tab-content">
       <div class="dashboard-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
@@ -119,13 +114,12 @@
             </tr>
           </thead>
           <tbody id="inventoryTableBody">
-            <!-- Dynamically rendered -->
+
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ================= TAB 3: CIRCULATION ================= -->
     <div id="tab-circulation" class="tab-content">
       <div class="dashboard-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
@@ -146,13 +140,12 @@
             </tr>
           </thead>
           <tbody id="circulationBody">
-            <!-- Dynamically rendered -->
+
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ================= TAB 4: STUDENTS ================= -->
     <div id="tab-students" class="tab-content">
       <div class="dashboard-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
@@ -175,13 +168,12 @@
             </tr>
           </thead>
           <tbody id="adminStudentsBody">
-            <!-- Dynamically rendered -->
+
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ================= TAB 5: MESSAGES ================= -->
     <div id="tab-messages" class="tab-content">
       <div class="dashboard-section">
         <h2 style="margin-bottom: 15px;">Contact Messages & Inquiries</h2>
@@ -198,7 +190,7 @@
             </tr>
           </thead>
           <tbody id="adminMessagesBody">
-            <!-- Dynamically rendered -->
+
           </tbody>
         </table>
       </div>
@@ -206,7 +198,6 @@
 
   </div>
 
-  <!-- Add Book Modal -->
   <div class="modal-overlay" id="addBookModal" onclick="if(event.target === this) closeAddBookModal()">
     <div class="modal-card">
       <button class="modal-close" onclick="closeAddBookModal()">&times;</button>
@@ -236,7 +227,6 @@
     </div>
   </div>
 
-  <!-- Issue Book Modal -->
   <div class="modal-overlay" id="issueBookModal" onclick="if(event.target === this) closeIssueModal()">
     <div class="modal-card">
       <button class="modal-close" onclick="closeIssueModal()">&times;</button>
@@ -245,13 +235,13 @@
         <div style="margin-bottom: 10px;">
           <label style="font-size: 13px; color: #666;">Select Student</label>
           <select id="issueStudentSelect" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-top: 4px;">
-            <!-- Dynamically rendered -->
+
           </select>
         </div>
         <div style="margin-bottom: 10px;">
           <label style="font-size: 13px; color: #666;">Select Available Book</label>
           <select id="issueBookSelect" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-top: 4px;">
-            <!-- Dynamically rendered -->
+
           </select>
         </div>
         <div style="margin-bottom: 10px;">
@@ -266,7 +256,6 @@
     </div>
   </div>
 
-  <!-- Add Student Modal -->
   <div class="modal-overlay" id="addStudentModal" onclick="if(event.target === this) closeAddStudentModal()">
     <div class="modal-card">
       <button class="modal-close" onclick="closeAddStudentModal()">&times;</button>
@@ -296,7 +285,6 @@
     </div>
   </div>
 
-  <!-- ================= FOOTER ================= -->
   <footer class="main-footer">
     <div class="container footer-grid">
       <div>
@@ -334,16 +322,15 @@
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
-      
+
       document.getElementById('tab-' + tabId).classList.add('active');
       btn.classList.add('active');
     }
 
-    // Render Overview Tab
     function renderOverview() {
       if (!window.SLMS_STORE) return;
       const stats = window.SLMS_STORE.getOverviewStats();
-      
+
       document.getElementById('admStatTotalBooks').innerText = `${stats.totalTitles} Titles (${stats.totalBooks} Copies)`;
       document.getElementById('admStatIssuedBooks').innerText = `${stats.issuedBooks} Books`;
       document.getElementById('admStatStudents').innerText = `${stats.registeredStudents}`;
@@ -368,7 +355,6 @@
       });
     }
 
-    // Render Inventory Tab
     function renderInventory() {
       if (!window.SLMS_STORE) return;
       const books = window.SLMS_STORE.getBooks();
@@ -394,7 +380,6 @@
       });
     }
 
-    // Render Circulation Tab
     function renderCirculation() {
       if (!window.SLMS_STORE) return;
       const circulations = window.SLMS_STORE.getCirculations();
@@ -404,7 +389,7 @@
       circulations.forEach(c => {
         const tr = document.createElement('tr');
         const statusClass = c.status === 'Overdue' ? 'status-overdue' : (c.status === 'Returned' ? 'status-returned' : 'status-issued');
-        const actionBtn = c.status === 'Returned' 
+        const actionBtn = c.status === 'Returned'
           ? '<span style="color:#28a745; font-size:12px; font-weight:bold;">Returned</span>'
           : `<button class="btn-sm btn-success" onclick="adminReturnBook(${c.id}, '${c.bookTitle}')">Return</button>`;
 
@@ -421,7 +406,6 @@
       });
     }
 
-    // Render Students Tab
     function renderStudents() {
       if (!window.SLMS_STORE) return;
       const students = window.SLMS_STORE.getStudents();
@@ -431,7 +415,7 @@
       students.forEach(s => {
         const activeBorrows = window.SLMS_STORE.getStudentActiveBorrows(s.studentId);
         const hasOverdue = activeBorrows.some(b => b.status === 'Overdue');
-        const statusBadge = hasOverdue 
+        const statusBadge = hasOverdue
           ? '<span class="status-badge status-overdue">Overdue Fine</span>'
           : '<span class="status-badge status-returned">Active</span>';
 
@@ -448,7 +432,6 @@
       });
     }
 
-    // Render Messages Tab
     function renderMessages() {
       if (!window.SLMS_STORE) return;
       const msgs = window.SLMS_STORE.getMessages();
@@ -482,7 +465,6 @@
       });
     }
 
-    // Populate Issue Modal Selects
     function populateIssueModalOptions() {
       const stuSelect = document.getElementById('issueStudentSelect');
       const bookSelect = document.getElementById('issueBookSelect');
@@ -508,7 +490,6 @@
       });
     }
 
-    // Refresh all tables
     function refreshAdminDashboard() {
       renderOverview();
       renderInventory();
@@ -517,7 +498,6 @@
       renderMessages();
     }
 
-    // Modals
     function openAddBookModal() {
       document.getElementById('addBookModal').classList.add('active');
     }
@@ -541,7 +521,6 @@
       document.getElementById('addStudentModal').classList.remove('active');
     }
 
-    // Actions
     function handleAddBook(e) {
       e.preventDefault();
       const title = document.getElementById('newBookTitle').value;
@@ -573,7 +552,7 @@
       const isbn = document.getElementById('issueBookSelect').value;
       const dueDateVal = document.getElementById('issueDueDate').value;
 
-      const formattedDueDate = dueDateVal 
+      const formattedDueDate = dueDateVal
         ? new Date(dueDateVal).toLocaleDateString('en-GB')
         : null;
 
@@ -673,7 +652,6 @@
       });
     }
 
-    // Reactive listener for data updates across tabs
     window.addEventListener('slms_data_changed', refreshAdminDashboard);
 
     document.addEventListener('DOMContentLoaded', () => {

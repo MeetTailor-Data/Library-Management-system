@@ -1,16 +1,6 @@
-/**
- * Smart Library Management System (SLMS) - Unified Data Store & Reactive State Engine
- * Synchronizes real-time data across:
- * - Student borrowing & returns
- * - Admin inventory, circulation, students list, and overview stats
- * - Public catalog dynamic rendering
- * - Contact inquiries
- */
-
 (function(window) {
   'use strict';
 
-  // Storage Keys
   const STORAGE_KEYS = {
     BOOKS: 'slms_db_books',
     USERS: 'slms_db_users',
@@ -18,7 +8,6 @@
     MESSAGES: 'slms_db_messages'
   };
 
-  // Seed Data: Books
   const DEFAULT_BOOKS = [
     {
       id: 1,
@@ -132,7 +121,6 @@
     }
   ];
 
-  // Seed Data: Users
   const DEFAULT_USERS = [
     {
       id: 1,
@@ -208,7 +196,6 @@
     }
   ];
 
-  // Seed Data: Circulations
   const DEFAULT_CIRCULATIONS = [
     {
       id: 1,
@@ -308,7 +295,6 @@
     }
   ];
 
-  // Seed Data: Messages
   const DEFAULT_MESSAGES = [
     {
       id: 1,
@@ -330,13 +316,11 @@
     }
   ];
 
-  // Initialize and Seed LocalStorage
   function initStore() {
     if (!localStorage.getItem(STORAGE_KEYS.BOOKS)) {
       localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(DEFAULT_BOOKS));
     }
-    
-    // Ensure all default users exist and real student names are populated
+
     let users = getRaw(STORAGE_KEYS.USERS, []);
     if (!users || users.length === 0) {
       users = DEFAULT_USERS;
@@ -346,7 +330,7 @@
         if (idx === -1) {
           users.push(defUser);
         } else {
-          // If name was stored as placeholder (e.g. "Student STU105" or equals ID), sync to authentic name
+
           if (!users[idx].name || users[idx].name.toLowerCase().startsWith('student stu') || users[idx].name.toUpperCase() === defUser.studentId.toUpperCase()) {
             users[idx].name = defUser.name;
           }
@@ -358,7 +342,6 @@
     }
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
 
-    // Ensure all circulation history records exist
     let circs = getRaw(STORAGE_KEYS.CIRCULATIONS, []);
     if (!circs || circs.length === 0) {
       circs = DEFAULT_CIRCULATIONS;
@@ -376,21 +359,18 @@
       localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(DEFAULT_MESSAGES));
     }
 
-    // Connect to SQL Backend
     syncWithBackend();
     if (!window._slms_sync_interval) {
       window._slms_sync_interval = setInterval(syncWithBackend, 3500);
     }
   }
 
-  // Live Sync with SQL Backend
   async function syncWithBackend() {
     try {
       const res = await fetch('/api/health');
       if (!res.ok) return;
       SLMS_STORE.isSqlConnected = true;
 
-      // 1. Sync Books from SQL
       const bRes = await fetch('/api/books');
       if (bRes.ok) {
         const bData = await bRes.json();
@@ -410,7 +390,6 @@
         }
       }
 
-      // 2. Sync Circulations from SQL
       const cRes = await fetch('/api/circulation/all');
       if (cRes.ok) {
         const cData = await cRes.json();
@@ -419,7 +398,6 @@
         }
       }
 
-      // 3. Sync Students from SQL
       const uRes = await fetch('/api/users/students');
       if (uRes.ok) {
         const uData = await uRes.json();
@@ -451,12 +429,10 @@
     }
   }
 
-  // Trigger reactive update across window
   function notifyChange() {
     window.dispatchEvent(new CustomEvent('slms_data_changed'));
   }
 
-  // Raw Helpers
   function getRaw(key, fallback) {
     try {
       const val = localStorage.getItem(key);
@@ -471,13 +447,11 @@
     notifyChange();
   }
 
-  // ================= DATA STORE API =================
   const SLMS_STORE = {
     isSqlConnected: false,
     syncNow: syncWithBackend,
     init: initStore,
 
-    // --- BOOKS ---
     getBooks() {
       return getRaw(STORAGE_KEYS.BOOKS, DEFAULT_BOOKS);
     },
@@ -504,7 +478,6 @@
       books.unshift(newBook);
       setRaw(STORAGE_KEYS.BOOKS, books);
 
-      // Async SQL push
       fetch('/api/books', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -530,7 +503,6 @@
       books = books.filter(b => b.isbn !== isbn);
       setRaw(STORAGE_KEYS.BOOKS, books);
 
-      // Async SQL push
       fetch('/api/books', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -538,7 +510,6 @@
       }).then(() => syncWithBackend()).catch(() => {});
     },
 
-    // --- USERS / STUDENTS ---
     getUsers() {
       return getRaw(STORAGE_KEYS.USERS, DEFAULT_USERS);
     },
@@ -576,7 +547,6 @@
       users.push(newStu);
       setRaw(STORAGE_KEYS.USERS, users);
 
-      // Async SQL push
       fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -586,7 +556,6 @@
       return { success: true, student: newStu };
     },
 
-    // --- CIRCULATION (ISSUE & RETURN) ---
     getCirculations() {
       return getRaw(STORAGE_KEYS.CIRCULATIONS, DEFAULT_CIRCULATIONS);
     },
@@ -614,7 +583,6 @@
         return { success: false, message: `Borrow Limit Exceeded: Student (${studentId}) already has 3 active borrowed books.` };
       }
 
-      // Check if student already holds this exact book
       const alreadyBorrowed = activeBorrows.find(b => b.isbn === isbn);
       if (alreadyBorrowed) {
         return { success: false, message: `Student already has an active issue for this book ("${alreadyBorrowed.bookTitle}").` };
@@ -631,12 +599,10 @@
         return { success: false, message: `No copies of "${book.title}" are currently available.` };
       }
 
-      // Decrement available copies
       book.availableCopies -= 1;
       books[bookIdx] = book;
       localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(books));
 
-      // Calculate due date (14 days default or custom)
       let formattedDue = customDueDate;
       if (!formattedDue) {
         const d = new Date();
@@ -662,7 +628,6 @@
       circulations.unshift(newCirc);
       setRaw(STORAGE_KEYS.CIRCULATIONS, circulations);
 
-      // Async SQL push
       fetch('/api/circulation/issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -698,7 +663,6 @@
       circulations[circIdx] = circ;
       localStorage.setItem(STORAGE_KEYS.CIRCULATIONS, JSON.stringify(circulations));
 
-      // Increment available copies in books inventory
       const books = this.getBooks();
       const bookIdx = books.findIndex(b => b.isbn === circ.isbn || b.title.toLowerCase() === circ.bookTitle.toLowerCase());
       if (bookIdx !== -1) {
@@ -708,7 +672,6 @@
 
       notifyChange();
 
-      // Async SQL push
       fetch('/api/circulation/return', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -718,7 +681,6 @@
       return { success: true, message: `Book "${circ.bookTitle}" marked as Returned for ${circ.studentName}.` };
     },
 
-    // --- CONTACT MESSAGES ---
     getMessages() {
       return getRaw(STORAGE_KEYS.MESSAGES, DEFAULT_MESSAGES);
     },
@@ -755,7 +717,6 @@
       setRaw(STORAGE_KEYS.MESSAGES, msgs);
     },
 
-    // --- OVERVIEW STATS CALCULATOR ---
     getOverviewStats() {
       const books = this.getBooks();
       const circulations = this.getCirculations();
@@ -782,7 +743,6 @@
     }
   };
 
-  // Auto-init on load
   SLMS_STORE.init();
   window.SLMS_STORE = SLMS_STORE;
 

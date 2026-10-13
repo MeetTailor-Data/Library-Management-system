@@ -1,17 +1,9 @@
 <?php
-/**
- * Smart Library Management System - Database Layer (PDO SQL)
- * Replaces old flat-file JSON with SQL-based relational architecture.
- */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/**
- * Get or initialize the PDO database connection
- * @return PDO
- */
 function get_db() {
     static $pdo = null;
 
@@ -35,18 +27,18 @@ function get_db() {
             $pdo = new PDO($dsn, $cfg['username'], $cfg['password'], $options);
             return $pdo;
         } catch (PDOException $e) {
-            // Attempt to create database if it does not exist on MySQL
+
             try {
                 $rootDsn = "mysql:host={$cfg['host']};port={$cfg['port']};charset={$cfg['charset']}";
                 $tempPdo = new PDO($rootDsn, $cfg['username'], $cfg['password'], $options);
                 $tempPdo->exec("CREATE DATABASE IF NOT EXISTS `{$cfg['database']}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
                 unset($tempPdo);
-                
+
                 $pdo = new PDO($dsn, $cfg['username'], $cfg['password'], $options);
                 initialize_tables($pdo, 'mysql');
                 return $pdo;
             } catch (PDOException $mysqlError) {
-                // If MySQL is completely down or unreachable, seamlessly fallback to SQLite for local development
+
                 return init_sqlite_fallback($config['sqlite']['path']);
             }
         }
@@ -55,9 +47,6 @@ function get_db() {
     }
 }
 
-/**
- * Initialize SQLite fallback instance
- */
 function init_sqlite_fallback($sqlitePath) {
     static $sqlitePdo = null;
     if ($sqlitePdo !== null) {
@@ -79,14 +68,10 @@ function init_sqlite_fallback($sqlitePath) {
     return $sqlitePdo;
 }
 
-/**
- * Ensure database tables and default seed data exist
- */
 function initialize_tables(PDO $pdo, $type = 'mysql') {
     $autoInc = ($type === 'sqlite') ? 'AUTOINCREMENT' : 'AUTO_INCREMENT';
     $pk = ($type === 'sqlite') ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'INT AUTO_INCREMENT PRIMARY KEY';
 
-    // 1. Users Table
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
         id {$pk},
         user_id VARCHAR(50) NOT NULL UNIQUE,
@@ -97,7 +82,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         created_at DATE NOT NULL
     )");
 
-    // 2. Books Table
     $pdo->exec("CREATE TABLE IF NOT EXISTS books (
         id {$pk},
         title VARCHAR(255) NOT NULL,
@@ -111,7 +95,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // 3. Issued Books Table
     $pdo->exec("CREATE TABLE IF NOT EXISTS issued_books (
         id {$pk},
         user_id VARCHAR(50) NOT NULL,
@@ -126,7 +109,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         fine DECIMAL(10,2) NOT NULL DEFAULT 0.00
     )");
 
-    // 4. Messages Table
     $pdo->exec("CREATE TABLE IF NOT EXISTS messages (
         id {$pk},
         name VARCHAR(100) NOT NULL,
@@ -137,7 +119,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         created_at DATE NOT NULL
     )");
 
-    // Seed default admin if table is empty
     $count = (int)$pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
     if ($count === 0) {
         $stmt = $pdo->prepare("INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)");
@@ -147,7 +128,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         $stmt->execute(['STU103', 'David Miller', 'david@example.com', 'student123', 'student', '2026-04-05']);
     }
 
-    // Seed default books if table is empty
     $bookCount = (int)$pdo->query("SELECT COUNT(*) FROM books")->fetchColumn();
     if ($bookCount === 0) {
         $stmt = $pdo->prepare("INSERT INTO books (title, author, category, isbn, total_copies, available_copies, image, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -168,7 +148,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         }
     }
 
-    // Seed default issued records
     $issuedCount = (int)$pdo->query("SELECT COUNT(*) FROM issued_books")->fetchColumn();
     if ($issuedCount === 0) {
         $stmt = $pdo->prepare("INSERT INTO issued_books (user_id, student_name, book_id, book_title, isbn, issue_date, due_date, return_date, status, fine) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -178,7 +157,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
     }
 }
 
-// Send JSON API Response
 function json_response($status, $message, $data = null, $code = 200) {
     http_response_code($code);
     header('Content-Type: application/json');
@@ -190,34 +168,29 @@ function json_response($status, $message, $data = null, $code = 200) {
     exit();
 }
 
-// Get Currently Logged In User
 function get_logged_in_user() {
     return $_SESSION['user'] ?? null;
 }
 
-// Check if user is logged in
 function is_logged_in() {
     return isset($_SESSION['user']);
 }
 
-// Check if current user is Admin
 function is_admin() {
     return isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'admin';
 }
 
-// Automated Overdue Fine Calculation Engine (₹5 per day overdue)
 function calculate_overdue_fine($due_date_str, $return_date_str = null) {
     $dueDate = new DateTime($due_date_str);
     $checkDate = $return_date_str ? new DateTime($return_date_str) : new DateTime();
 
-    // Reset time components for accurate day comparison
     $dueDate->setTime(0, 0, 0);
     $checkDate->setTime(0, 0, 0);
 
     if ($checkDate > $dueDate) {
         $interval = $dueDate->diff($checkDate);
         $overdueDays = (int)$interval->days;
-        $fineRatePerDay = 5; // ₹5 per day
+        $fineRatePerDay = 5;
         return [
             'is_overdue' => true,
             'overdue_days' => $overdueDays,

@@ -1,8 +1,4 @@
 <?php
-/**
- * Smart Library Management System - Books & Catalog Controller (SQL PDO)
- * Handles book listing, searching, filtering, adding, editing, and deleting.
- */
 
 require_once __DIR__ . '/db.php';
 
@@ -33,7 +29,6 @@ switch ($action) {
         json_response(false, 'Invalid book action specified.', null, 400);
 }
 
-// 1. List Books (with optional Category and Search filters)
 function list_books() {
     $db = get_db();
     $category = trim($_GET['category'] ?? '');
@@ -42,13 +37,11 @@ function list_books() {
     $sql = "SELECT id, title, author, category, isbn, total_copies, available_copies, image, description FROM books WHERE 1=1";
     $params = [];
 
-    // Category Filter
     if (!empty($category) && strcasecmp($category, 'All') !== 0) {
         $sql .= " AND LOWER(category) = LOWER(?)";
         $params[] = $category;
     }
 
-    // Search Filter (Title, Author, ISBN)
     if (!empty($search)) {
         $sql .= " AND (LOWER(title) LIKE ? OR LOWER(author) LIKE ? OR LOWER(isbn) LIKE ?)";
         $searchTerm = '%' . strtolower($search) . '%';
@@ -62,7 +55,6 @@ function list_books() {
     $stmt->execute($params);
     $books = $stmt->fetchAll();
 
-    // Format types for consistency
     foreach ($books as &$b) {
         $b['id'] = (int)$b['id'];
         $b['total_copies'] = (int)$b['total_copies'];
@@ -72,7 +64,6 @@ function list_books() {
     json_response(true, 'Books retrieved successfully.', $books);
 }
 
-// 2. Get Single Book Details
 function get_single_book() {
     $id = (int)($_GET['id'] ?? 0);
     $db = get_db();
@@ -91,7 +82,6 @@ function get_single_book() {
     json_response(false, 'Book not found.', null, 404);
 }
 
-// 3. Add New Book (Admin Only)
 function add_book() {
     $title = trim($_POST['title'] ?? '');
     $author = trim($_POST['author'] ?? '');
@@ -107,7 +97,6 @@ function add_book() {
 
     $db = get_db();
 
-    // Check ISBN uniqueness
     $checkStmt = $db->prepare("SELECT id FROM books WHERE isbn = ? LIMIT 1");
     $checkStmt->execute([$isbn]);
     if ($checkStmt->fetch()) {
@@ -133,7 +122,6 @@ function add_book() {
     json_response(true, "Book '{$title}' added successfully to inventory.", $newBook);
 }
 
-// 4. Edit Book (Admin Only)
 function edit_book() {
     $id = (int)($_POST['id'] ?? 0);
     $title = trim($_POST['title'] ?? '');
@@ -171,7 +159,6 @@ function edit_book() {
     json_response(true, 'Book updated successfully.');
 }
 
-// 5. Delete Book (Admin Only)
 function delete_book() {
     $id = (int)($_POST['id'] ?? 0);
     $db = get_db();

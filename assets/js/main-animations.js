@@ -1,8 +1,3 @@
-/**
- * Smart Library Management System - Interactive Animations & UI Enhancements
- * Includes: Scroll-reveal, animated counters, FAQ accordions, floating back-to-top, and toast notifications.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
   initScrollAnimations();
   initNavbarElevation();
@@ -11,9 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initFaqAccordion();
 });
 
-/* =====================================================
-   1. SCROLL REVEAL (IntersectionObserver)
-===================================================== */
 function initScrollAnimations() {
   const revealElements = document.querySelectorAll(
     '.service-card, .catalog-card, .book, .project-card, .mission-box, .values-box, .stat-card, .faq-item, .contact-container'
@@ -48,9 +40,6 @@ function initScrollAnimations() {
   unrevealed.forEach(el => observer.observe(el));
 }
 
-/* =====================================================
-   2. NAVBAR ELEVATION ON SCROLL
-===================================================== */
 function initNavbarElevation() {
   const header = document.querySelector('.main-header');
   if (!header) return;
@@ -64,9 +53,6 @@ function initNavbarElevation() {
   });
 }
 
-/* =====================================================
-   3. FLOATING BACK-TO-TOP BUTTON
-===================================================== */
 function initBackToTopButton() {
   if (document.getElementById('backToTopBtn')) return;
 
@@ -90,9 +76,6 @@ function initBackToTopButton() {
   });
 }
 
-/* =====================================================
-   4. ANIMATED NUMBER COUNTERS
-===================================================== */
 function initAnimatedCounters() {
   const statNumbers = document.querySelectorAll('.stat-number');
   if (!statNumbers.length) return;
@@ -129,9 +112,6 @@ function initAnimatedCounters() {
   statNumbers.forEach(num => counterObserver.observe(num));
 }
 
-/* =====================================================
-   5. INTERACTIVE FAQ ACCORDION (For services.html)
-===================================================== */
 function initFaqAccordion() {
   const faqItems = document.querySelectorAll('.faq-item');
   if (!faqItems.length) return;
@@ -146,8 +126,7 @@ function initFaqAccordion() {
 
       question.addEventListener('click', () => {
         const isOpen = item.classList.contains('open');
-        
-        // Close other FAQs
+
         faqItems.forEach(other => {
           other.classList.remove('open');
           const icon = other.querySelector('.faq-icon');
@@ -164,9 +143,6 @@ function initFaqAccordion() {
   });
 }
 
-/* =====================================================
-   6. CUSTOM TOAST NOTIFICATION
-===================================================== */
 function showToast(message, type = 'success') {
   let toast = document.getElementById('slmsToast');
   if (!toast) {

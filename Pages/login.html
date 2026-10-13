@@ -123,10 +123,8 @@
       <button type="button" id="signupTab" onclick="showSignup()">Signup</button>
     </div>
 
-    <!-- Alert Box for feedback -->
     <div id="alertBox" style="display: none; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; text-align: center;"></div>
 
-    <!-- Login Form -->
     <form id="loginForm" class="active" action="../backend/auth.php" method="POST" onsubmit="return handleLogin(event)">
       <input type="hidden" name="action" value="login">
       <div class="input-box">
@@ -139,7 +137,6 @@
       <button type="button" class="btn guest" onclick="goHome()">Continue as Guest</button>
     </form>
 
-    <!-- Signup Form -->
     <form id="signupForm" action="../backend/auth.php" method="POST" onsubmit="return handleSignup(event)">
       <input type="hidden" name="action" value="signup">
       <div class="input-box">
@@ -169,7 +166,7 @@
   <script src="../assets/js/slms-store.js"></script>
   <script src="../assets/js/auth-session.js"></script>
   <script>
-    // If user is already logged in, redirect them directly to their dashboard
+
     window.addEventListener('DOMContentLoaded', () => {
       const existingUser = getCurrentUser();
       if (existingUser) {
@@ -214,13 +211,12 @@
       e.preventDefault();
       const id = document.getElementById('loginUserId').value.trim();
       const pass = document.getElementById('loginPassword').value.trim();
-      
+
       if (!id || !pass) {
         showAlert('Please enter your ID and password.', true);
         return false;
       }
 
-      // Check if Admin login (e.g., ADMIN01, admin, librarian)
       if (id.toUpperCase().includes('ADMIN') || id.toLowerCase() === 'librarian') {
         const adminUser = {
           role: 'admin',
@@ -233,10 +229,9 @@
         return false;
       }
 
-      // Regular Student login
       const stuRecord = window.SLMS_STORE ? window.SLMS_STORE.getStudentById(id) : null;
       let stuName = (stuRecord && stuRecord.name && !stuRecord.name.toLowerCase().startsWith('student stu')) ? stuRecord.name : '';
-      
+
       if (!stuName) {
         if (id.toUpperCase() === 'STU105') stuName = 'Meet Tailor';
         else if (id.toUpperCase() === 'STU101') stuName = 'John Doe';
@@ -246,7 +241,6 @@
         else stuName = 'Student';
       }
 
-      // If not yet in store, register seamlessly
       if (!stuRecord && window.SLMS_STORE) {
         window.SLMS_STORE.addStudent({
           studentId: id.toUpperCase(),
@@ -265,7 +259,6 @@
       setCurrentUser(studentUser);
       alert(`Login Successful!\nWelcome back, ${stuName} (${id.toUpperCase()})`);
 
-      // Check URL redirect param
       const urlParams = new URLSearchParams(window.location.search);
       const redirectPage = urlParams.get('redirect') || 'student-dashboard.html';
       window.location.href = redirectPage;

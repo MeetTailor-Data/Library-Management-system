@@ -1,8 +1,4 @@
 <?php
-/**
- * Smart Library Management System - Authentication Handler (SQL PDO)
- * Handles Login, Registration (Signup), Logout, and Session Verification.
- */
 
 require_once __DIR__ . '/db.php';
 
@@ -29,7 +25,6 @@ switch ($action) {
         json_response(false, 'Invalid authentication action specified.', null, 400);
 }
 
-// 1. Process Login
 function handle_login() {
     $userId = trim($_POST['user_id'] ?? '');
     $password = trim($_POST['password'] ?? '');
@@ -44,11 +39,11 @@ function handle_login() {
     $matchedUser = $stmt->fetch();
 
     if ($matchedUser) {
-        // Verify password (plain text or password_hash)
+
         $passwordMatches = ($matchedUser['password'] === $password) || password_verify($password, $matchedUser['password']);
 
         if ($passwordMatches) {
-            // Set PHP Session
+
             $_SESSION['user'] = [
                 'id' => (int)$matchedUser['id'],
                 'user_id' => $matchedUser['user_id'],
@@ -57,12 +52,11 @@ function handle_login() {
                 'role' => $matchedUser['role']
             ];
 
-            // Return JSON or redirect
             if (!empty($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
                 json_response(true, 'Login successful!', $_SESSION['user']);
             } else {
-                $redirectUrl = ($matchedUser['role'] === 'admin') 
-                    ? '../Pages/admin-dashboard.html' 
+                $redirectUrl = ($matchedUser['role'] === 'admin')
+                    ? '../Pages/admin-dashboard.html'
                     : '../Pages/student-dashboard.html';
                 header("Location: " . $redirectUrl);
                 exit();
@@ -73,7 +67,6 @@ function handle_login() {
     json_response(false, 'Invalid User ID or Password. Please try again.', null, 401);
 }
 
-// 2. Process Registration / Signup
 function handle_signup() {
     $name = trim($_POST['full_name'] ?? '');
     $studentId = strtoupper(trim($_POST['student_id'] ?? ''));
@@ -91,7 +84,6 @@ function handle_signup() {
 
     $db = get_db();
 
-    // Check for duplicate Student ID or Email
     $checkStmt = $db->prepare("SELECT user_id, email FROM users WHERE LOWER(user_id) = LOWER(?) OR LOWER(email) = LOWER(?) LIMIT 1");
     $checkStmt->execute([$studentId, $email]);
     $existing = $checkStmt->fetch();
@@ -105,7 +97,6 @@ function handle_signup() {
         }
     }
 
-    // Insert new user into SQL database
     $insertStmt = $db->prepare("INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, 'student', ?)");
     $createdDate = date('Y-m-d');
     $insertStmt->execute([$studentId, $name, $email, $password, $createdDate]);
@@ -119,7 +110,6 @@ function handle_signup() {
         'role' => 'student'
     ];
 
-    // Auto-login newly registered student
     $_SESSION['user'] = $newUser;
 
     if (!empty($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
@@ -130,7 +120,6 @@ function handle_signup() {
     }
 }
 
-// 3. Process Logout
 function handle_logout() {
     $_SESSION = [];
     if (ini_get("session.use_cookies")) {
@@ -150,7 +139,6 @@ function handle_logout() {
     }
 }
 
-// 4. Get Current User Info
 function get_user_info() {
     $user = get_logged_in_user();
     if ($user) {

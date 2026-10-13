@@ -1,6 +1,3 @@
-/* =====================================================
-   GLOBAL
-===================================================== */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -18,9 +15,6 @@ h2 {
   margin-bottom: 40px;
 }
 
-/* =====================================================
-   HEADER
-===================================================== */
 .main-header {
   position: fixed;
   top: 0;
@@ -72,9 +66,6 @@ nav ul li a {
   font-weight: 500;
 }
 
-/* =====================================================
-   BUTTONS
-===================================================== */
 .btn-primary {
   background: #ff5722;
   color: #fff;
@@ -91,9 +82,6 @@ nav ul li a {
   text-decoration: none;
 }
 
-/* =====================================================
-   HERO
-===================================================== */
 .home-hero {
   height: 100vh;
   background: url("../images/the_library_1.jpg") center/cover no-repeat;
@@ -115,18 +103,12 @@ nav ul li a {
   margin-bottom: 15px;
 }
 
-/* =====================================================
-   ABOUT
-===================================================== */
 .home-about {
   padding: 80px 0;
   background: #fff;
   text-align: center;
 }
 
-/* =====================================================
-   SERVICES
-===================================================== */
 .home-services {
   padding: 80px 0;
 }
@@ -165,9 +147,6 @@ nav ul li a {
   transform: scale(1.04);
 }
 
-/* =====================================================
-   CATALOG
-===================================================== */
 .home-catalog {
   padding: 80px 0;
   background: #fff;
@@ -210,9 +189,6 @@ nav ul li a {
   transform: scale(1.04);
 }
 
-/* =====================================================
-   FOOTER
-===================================================== */
 .main-footer {
   background: #333;
   color: #fff;
@@ -234,10 +210,6 @@ nav ul li a {
   text-align: center;
   margin-top: 20px;
 }
-
-/* =====================================================
-   ABOUT US PAGE
-===================================================== */
 
 .about-hero {
   height: 60vh;
@@ -298,10 +270,6 @@ nav ul li a {
 .values-box li {
   margin-bottom: 10px;
 }
-
-/* =====================================================
-   SERVICES PAGE
-===================================================== */
 
 .services-hero {
   height: 55vh;
@@ -389,10 +357,6 @@ nav ul li a {
   border-radius: 6px;
 }
 
-
-/* ================= CATALOG FIX ================= */
-
-/* Book grid */
 .book-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -401,7 +365,6 @@ nav ul li a {
   align-items: stretch;
 }
 
-/* Book card */
 .book-card {
   background: #ffffff;
   border-radius: 10px;
@@ -417,16 +380,14 @@ nav ul li a {
   transform: translateY(-6px);
 }
 
-/* FIX IMAGE SIZE */
 .book-card img {
   width: 100%;
-  height: 200px;              /* 🔑 FIXED HEIGHT */
-  object-fit: cover;          /* 🔑 CROPS PROPERLY */
+  height: 200px;              
+  object-fit: cover;          
   border-radius: 6px;
   margin-bottom: 10px;
 }
 
-/* Text */
 .book-card h3 {
   font-size: 18px;
   margin: 8px 0 4px;
@@ -445,7 +406,6 @@ nav ul li a {
   flex-grow: 1;
 }
 
-/* Button */
 .book-card button {
   padding: 10px;
   border: none;
@@ -526,7 +486,6 @@ nav ul li a {
   transform: translateY(-2px);
 }
 
-/* ===== SEARCH & FILTER BAR ===== */
 .search-container {
   max-width: 800px;
   margin: 30px auto 20px;
@@ -570,7 +529,6 @@ nav ul li a {
   background: #e64a19;
 }
 
-/* Category Filter Pills */
 .category-filters {
   display: flex;
   flex-wrap: wrap;
@@ -596,7 +554,6 @@ nav ul li a {
   border-color: #2c3e50;
 }
 
-/* Book Availability Badges */
 .badge {
   display: inline-block;
   padding: 4px 10px;
@@ -624,7 +581,6 @@ nav ul li a {
   margin-bottom: 2px;
 }
 
-/* Book Details Modal */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -705,11 +661,6 @@ nav ul li a {
   justify-content: flex-end;
 }
 
-
-/* =====================================================
-   CONTACT PAGE
-===================================================== */
-
 .contact-section {
   padding: 60px 20px;
 }
@@ -753,16 +704,11 @@ nav ul li a {
   border-radius: 5px;
   cursor: pointer;
 }
-/* ===============================
-   PAGE OFFSET (FIX FIXED HEADER)
-================================ */
+
 .page-content {
   margin-top: 90px;
 }
 
-/* ===============================
-   CONTACT PAGE LAYOUT
-================================ */
 .contact-section {
   padding: 60px 20px;
   background: #f4f4f4;
@@ -780,7 +726,6 @@ nav ul li a {
   box-shadow: 0 6px 15px rgba(0,0,0,0.1);
 }
 
-/* INFO */
 .contact-info h2 {
   margin-bottom: 15px;
 }
@@ -790,7 +735,6 @@ nav ul li a {
   color: #555;
 }
 
-/* FORM */
 .contact-form h2 {
   margin-bottom: 15px;
 }
@@ -824,9 +768,6 @@ nav ul li a {
   background: #e64a19;
 }
 
-/* ===============================
-   DASHBOARD & TABLE STYLES
-================================ */
 .dashboard-container {
   max-width: 1200px;
   margin: 100px auto 50px;
@@ -897,7 +838,6 @@ nav ul li a {
   padding-bottom: 10px;
 }
 
-/* Tables */
 .custom-table {
   width: 100%;
   border-collapse: collapse;
@@ -948,7 +888,6 @@ nav ul li a {
 .btn-success { background: #28a745; color: #fff; }
 .btn-dark { background: #2c3e50; color: #fff; }
 
-/* Admin Tab Navigation */
 .admin-tabs {
   display: flex;
   gap: 10px;
@@ -999,7 +938,6 @@ nav ul li a {
   border-color: #ff5722;
 }
 
-/* Hamburger 3-Lines Button (Hidden on Desktop) */
 .hamburger-btn {
   display: none;
   flex-direction: column;
@@ -1033,13 +971,8 @@ nav ul li a {
   transform: translateY(-8.5px) rotate(-45deg);
 }
 
-/* =====================================================
-   RESPONSIVE DESIGN (MOBILE & TABLET)
-===================================================== */
-
-/* Tablet & Mobile (<= 768px) */
 @media (max-width: 768px) {
-  /* Header & Mobile 3-Lines Hamburger */
+  
   .main-header {
     position: sticky;
     top: 0;
@@ -1072,7 +1005,6 @@ nav ul li a {
     z-index: 1002;
   }
 
-  /* Dropdown Menu Container on Mobile */
   .navbar {
     order: 3;
     display: none;
@@ -1132,7 +1064,6 @@ nav ul li a {
     margin: 0;
   }
 
-  /* Offset for sticky header */
   .page-content {
     margin-top: 20px;
   }
@@ -1142,7 +1073,6 @@ nav ul li a {
     padding: 0 12px;
   }
 
-  /* Heroes */
   .home-hero, .about-hero, .services-hero {
     height: auto;
     min-height: 45vh;
@@ -1157,7 +1087,6 @@ nav ul li a {
     font-size: 14px;
   }
 
-  /* Grids & Cards */
   .services-grid,
   .projects-grid,
   .catalog-grid,
@@ -1168,7 +1097,6 @@ nav ul li a {
     gap: 20px;
   }
 
-  /* Book Catalog */
   .book-container {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 15px;
@@ -1183,7 +1111,6 @@ nav ul li a {
     font-size: 15px;
   }
 
-  /* Search & Filter Controls */
   .search-container {
     padding: 0 10px;
     margin: 20px auto 15px;
@@ -1208,7 +1135,6 @@ nav ul li a {
     font-size: 12px;
   }
 
-  /* Dashboards (Admin & Student) */
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1239,7 +1165,6 @@ nav ul li a {
     font-size: 12px;
   }
 
-  /* Tables (Horizontal scroll on mobile) */
   .custom-table {
     display: block;
     width: 100%;
@@ -1252,7 +1177,6 @@ nav ul li a {
     width: 100%;
   }
 
-  /* Modals */
   .modal-card {
     width: 95%;
     max-width: 95%;
@@ -1274,7 +1198,6 @@ nav ul li a {
   }
 }
 
-/* Small Mobile Screens (<= 480px) */
 @media (max-width: 480px) {
   .stats-grid {
     grid-template-columns: 1fr;
@@ -1291,11 +1214,6 @@ nav ul li a {
   }
 }
 
-/* =====================================================
-   INTERACTIVE ANIMATIONS & UI WIDGETS
-===================================================== */
-
-/* Scroll Reveal */
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(24px);
@@ -1308,13 +1226,11 @@ nav ul li a {
   transform: translateY(0);
 }
 
-/* Scrolled Header Effect */
 .main-header.scrolled-header {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
   background: rgba(255, 255, 255, 0.98);
 }
 
-/* Floating Back-To-Top Button */
 .back-to-top-btn {
   position: fixed;
   bottom: 25px;
@@ -1350,7 +1266,6 @@ nav ul li a {
   transform: translateY(-3px);
 }
 
-/* Interactive FAQ Accordion */
 .faq-toggle {
   cursor: pointer;
   display: flex;
@@ -1380,7 +1295,6 @@ nav ul li a {
   margin-top: 10px;
 }
 
-/* Toast Notifications */
 .slms-toast {
   position: fixed;
   bottom: 30px;

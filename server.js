@@ -1,9 +1,3 @@
-/**
- * Smart Library Management System (SLMS) - Local Server & SQL Engine
- * Built-in Node.js HTTP Server + Built-in SQLite Relational Database Engine
- * Zero external npm dependencies required.
- */
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -12,7 +6,6 @@ const { DatabaseSync } = require('node:sqlite');
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'library.db');
 
-// 1. Initialize SQLite Relational Database
 const db = new DatabaseSync(DB_FILE);
 
 function initDatabase() {
@@ -65,7 +58,6 @@ function initDatabase() {
     );
   `);
 
-  // Seed default users if empty
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
   if (userCount === 0) {
     const insertUser = db.prepare('INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)');
@@ -76,7 +68,6 @@ function initDatabase() {
     insertUser.run('STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', '2026-05-01');
   }
 
-  // Seed default books if empty
   const bookCount = db.prepare('SELECT COUNT(*) as count FROM books').get().count;
   if (bookCount === 0) {
     const insertBook = db.prepare(`
@@ -100,7 +91,6 @@ function initDatabase() {
     }
   }
 
-  // Seed default circulation if empty
   const circCount = db.prepare('SELECT COUNT(*) as count FROM issued_books').get().count;
   if (circCount === 0) {
     const insertCirc = db.prepare(`
@@ -115,7 +105,6 @@ function initDatabase() {
 
 initDatabase();
 
-// 2. MIME Types helper
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -129,7 +118,6 @@ const MIME_TYPES = {
   '.webp': 'image/webp'
 };
 
-// Helper to parse JSON body
 function parseBody(req) {
   return new Promise((resolve) => {
     let body = '';
@@ -138,7 +126,7 @@ function parseBody(req) {
       try {
         resolve(JSON.parse(body || '{}'));
       } catch (e) {
-        // try URLSearchParams fallback for form data
+
         const params = new URLSearchParams(body);
         const obj = {};
         for (const [k, v] of params.entries()) { obj[k] = v; }
@@ -158,13 +146,11 @@ function sendJson(res, status, message, data = null, statusCode = 200) {
   res.end(JSON.stringify({ status, message, data }));
 }
 
-// 3. HTTP Server & API Dispatcher
 const server = http.createServer(async (req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = urlObj.pathname;
   const method = req.method;
 
-  // Handle CORS preflight
   if (method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
@@ -175,14 +161,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ===================== API ENDPOINTS =====================
-  
-  // Health & SQL Test Check
   if (pathname === '/api/health') {
     return sendJson(res, true, 'SQL Database is connected and active.', { driver: 'SQLite (node:sqlite)', port: PORT });
   }
 
-  // 1. Auth: Login
   if (pathname === '/api/auth/login' || pathname === '/backend/auth.php' && urlObj.searchParams.get('action') === 'login') {
     if (method !== 'POST') return sendJson(res, false, 'Method not allowed', null, 405);
     const body = await parseBody(req);
@@ -208,7 +190,6 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // 2. Auth: Signup / Register
   if (pathname === '/api/auth/signup' || pathname === '/backend/auth.php' && urlObj.searchParams.get('action') === 'signup') {
     if (method !== 'POST') return sendJson(res, false, 'Method not allowed', null, 405);
     const body = await parseBody(req);
@@ -242,7 +223,6 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // 3. Books: List
   if (pathname === '/api/books' && method === 'GET' || pathname === '/backend/books.php' && (urlObj.searchParams.get('action') === 'list' || !urlObj.searchParams.get('action'))) {
     const category = urlObj.searchParams.get('category') || '';
     const search = urlObj.searchParams.get('search') || '';
@@ -265,7 +245,6 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, true, 'Books loaded', books);
   }
 
-  // 4. Books: Add Book (Admin)
   if (pathname === '/api/books' && method === 'POST' || pathname === '/backend/books.php' && urlObj.searchParams.get('action') === 'add') {
     const body = await parseBody(req);
     const title = (body.title || '').trim();
@@ -294,7 +273,6 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, true, `Book '${title}' added to inventory.`, { isbn, title, author });
   }
 
-  // 5. Books: Delete Book (Admin)
   if (pathname === '/api/books' && method === 'DELETE' || pathname === '/backend/books.php' && urlObj.searchParams.get('action') === 'delete') {
     const body = await parseBody(req);
     const isbn = body.isbn || urlObj.searchParams.get('isbn');
@@ -304,7 +282,6 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, true, 'Book deleted from inventory.');
   }
 
-  // 6. Circulation: Issue Book
   if (pathname === '/api/circulation/issue' || pathname === '/backend/circulation.php' && urlObj.searchParams.get('action') === 'issue') {
     if (method !== 'POST') return sendJson(res, false, 'Method not allowed', null, 405);
     const body = await parseBody(req);
@@ -315,10 +292,9 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, false, 'Student ID and ISBN are required.', null, 400);
     }
 
-    // Check student existence
     let student = db.prepare('SELECT * FROM users WHERE UPPER(user_id) = ?').get(studentId);
     if (!student) {
-      // Auto-register student if name provided, else require signup
+
       const studentName = body.student_name || `Student ${studentId}`;
       const now = new Date().toISOString().split('T')[0];
       db.prepare('INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)')
@@ -326,7 +302,6 @@ const server = http.createServer(async (req, res) => {
       student = { user_id: studentId, name: studentName };
     }
 
-    // Check borrow limit (Max 3 active books)
     const activeBorrows = db.prepare('SELECT COUNT(*) as count FROM issued_books WHERE UPPER(user_id) = ? AND status != ?')
       .get(studentId, 'Returned').count;
 
@@ -334,14 +309,12 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, false, `Borrow limit reached: Student (${studentId}) already has 3 active borrowed books.`, null, 400);
     }
 
-    // Check duplicate checkout
     const duplicate = db.prepare('SELECT id FROM issued_books WHERE UPPER(user_id) = ? AND isbn = ? AND status != ?')
       .get(studentId, isbn, 'Returned');
     if (duplicate) {
       return sendJson(res, false, `Student (${studentId}) already has an active issue of this book.`, null, 400);
     }
 
-    // Check book availability
     const book = db.prepare('SELECT * FROM books WHERE isbn = ?').get(isbn);
     if (!book) {
       return sendJson(res, false, 'Book not found in library inventory.', null, 404);
@@ -350,7 +323,6 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, false, `Sorry, "${book.title}" is currently out of stock (0 available).`, null, 400);
     }
 
-    // Decrement stock & insert issue record
     db.prepare('UPDATE books SET available_copies = available_copies - 1 WHERE id = ?').run(book.id);
 
     const issueDate = new Date().toLocaleDateString('en-GB');
@@ -375,7 +347,6 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // 7. Circulation: Return Book
   if (pathname === '/api/circulation/return' || pathname === '/backend/circulation.php' && urlObj.searchParams.get('action') === 'return') {
     if (method !== 'POST') return sendJson(res, false, 'Method not allowed', null, 405);
     const body = await parseBody(req);
@@ -393,7 +364,6 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, true, `Book "${issue.book_title}" returned successfully. Inventory stock restored.`);
   }
 
-  // 8. Circulation: List All for Admin
   if (pathname === '/api/circulation/all' || pathname === '/backend/circulation.php' && urlObj.searchParams.get('action') === 'list_all') {
     const circs = db.prepare('SELECT * FROM issued_books ORDER BY id DESC').all();
     const formatted = circs.map(c => ({
@@ -411,7 +381,6 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, true, 'All circulation records loaded', formatted);
   }
 
-  // 9. Circulation: Student Records
   if (pathname.startsWith('/api/circulation/student/') || pathname === '/backend/circulation.php' && urlObj.searchParams.get('action') === 'student_borrows') {
     const studentId = (pathname.split('/')[4] || urlObj.searchParams.get('student_id') || '').trim().toUpperCase();
     const records = db.prepare('SELECT * FROM issued_books WHERE UPPER(user_id) = ? ORDER BY id DESC').all(studentId);
@@ -430,7 +399,6 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, true, 'Student borrow history loaded', formatted);
   }
 
-  // 10. Admin: Overview Statistics
   if (pathname === '/api/admin/overview') {
     const books = db.prepare('SELECT total_copies, available_copies FROM books').all();
     const totalTitles = books.length;
@@ -461,13 +429,11 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // 11. Users: List all students (Admin)
   if (pathname === '/api/users/students') {
     const students = db.prepare("SELECT id, user_id as studentId, name, email, role, created_at FROM users WHERE role = 'student' ORDER BY id DESC").all();
     return sendJson(res, true, 'Students loaded', students);
   }
 
-  // 12. Contact Messages
   if (pathname === '/api/messages') {
     if (method === 'POST') {
       const body = await parseBody(req);
@@ -486,10 +452,8 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // ===================== STATIC FILE SERVING =====================
   let safePath = pathname === '/' ? '/Pages/index.html' : pathname;
-  
-  // Allow paths like /login.html or /catalog.html to resolve to /Pages/...
+
   if (safePath.endsWith('.html') && !safePath.startsWith('/Pages/')) {
     const candidate = path.join(__dirname, 'Pages', safePath);
     if (fs.existsSync(candidate)) {
@@ -499,7 +463,6 @@ const server = http.createServer(async (req, res) => {
 
   const filePath = path.join(__dirname, safePath);
 
-  // Security: prevent path traversal outside project root
   if (!filePath.startsWith(__dirname)) {
     res.writeHead(403);
     return res.end('Access Denied');

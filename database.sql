@@ -1,14 +1,6 @@
--- ==========================================================
--- Smart Library Management System (SLMS) - Database Schema
--- Database: MySQL / MariaDB (Compatible with SQLite/PostgreSQL)
--- ==========================================================
-
 CREATE DATABASE IF NOT EXISTS `library_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `library_db`;
 
--- --------------------------------------------------------
--- Table structure for `users`
--- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` VARCHAR(50) NOT NULL UNIQUE,
@@ -19,9 +11,6 @@ CREATE TABLE IF NOT EXISTS `users` (
     `created_at` DATE NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- --------------------------------------------------------
--- Table structure for `books`
--- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `books` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `title` VARCHAR(255) NOT NULL,
@@ -35,9 +24,6 @@ CREATE TABLE IF NOT EXISTS `books` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- --------------------------------------------------------
--- Table structure for `issued_books` (Circulation)
--- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `issued_books` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` VARCHAR(50) NOT NULL,
@@ -55,9 +41,6 @@ CREATE TABLE IF NOT EXISTS `issued_books` (
     CONSTRAINT `fk_issued_book` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- --------------------------------------------------------
--- Table structure for `messages` (Contact Form)
--- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `messages` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(100) NOT NULL,
@@ -68,11 +51,6 @@ CREATE TABLE IF NOT EXISTS `messages` (
     `created_at` DATE NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ==========================================================
--- SEED DATA
--- ==========================================================
-
--- Insert Users (Default Admin & Students)
 INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `password`, `role`, `created_at`) VALUES
 (1, 'ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', '2026-01-01'),
 (2, 'STU101', 'John Doe', 'john@example.com', 'student123', 'student', '2026-02-15'),
@@ -80,7 +58,6 @@ INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `password`, `role`, `crea
 (4, 'STU103', 'David Miller', 'david@example.com', 'student123', 'student', '2026-04-05')
 ON DUPLICATE KEY UPDATE `user_id` = VALUES(`user_id`);
 
--- Insert Initial Book Catalog
 INSERT INTO `books` (`id`, `title`, `author`, `category`, `isbn`, `total_copies`, `available_copies`, `image`, `description`) VALUES
 (1, 'The Wealth of Nations', 'Adam Smith', 'Economics', '978-0140432084', 5, 4, 'b9.jpg', 'A foundational work of classical economics exploring division of labor, productivity, and free markets.'),
 (2, 'The World as I See It', 'Albert Einstein', 'Science', '978-0806527901', 4, 4, 'b10.jpg', 'Albert Einstein\'s personal reflections on physics, humanity, peace, and the universe.'),
@@ -94,14 +71,12 @@ INSERT INTO `books` (`id`, `title`, `author`, `category`, `isbn`, `total_copies`
 (10, 'Ancient World Civilizations', 'Peter Heather', 'History', '978-0195155846', 4, 4, 'b8.jpg', 'Detailed study of early civilizations, empire building, and societal evolutions.')
 ON DUPLICATE KEY UPDATE `isbn` = VALUES(`isbn`);
 
--- Insert Issued Books Records
 INSERT INTO `issued_books` (`id`, `user_id`, `student_name`, `book_id`, `book_title`, `isbn`, `issue_date`, `due_date`, `return_date`, `status`, `fine`) VALUES
 (1, 'STU101', 'John Doe', 1, 'The Wealth of Nations', '978-0140432084', '2026-09-18', '2026-10-02', NULL, 'Issued', 0.00),
 (2, 'STU102', 'Emily Clark', 4, 'Clean Architecture & Code', '978-0134494166', '2026-09-10', '2026-09-24', NULL, 'Overdue', 40.00),
 (3, 'STU103', 'David Miller', 7, 'Sapiens: A Brief History', '978-0062316097', '2026-08-01', '2026-08-15', '2026-08-14', 'Returned', 0.00)
 ON DUPLICATE KEY UPDATE `id` = VALUES(`id`);
 
--- Insert Contact Inquiries
 INSERT INTO `messages` (`id`, `name`, `email`, `subject`, `message`, `status`, `created_at`) VALUES
 (1, 'Rahul Sharma', 'rahul@gmail.com', 'Book Request: Data Structures', 'Can you please add more copies of Data Structures by Cormen in the library catalog?', 'Unread', '2026-09-28'),
 (2, 'Ananya Patel', 'ananya@gmail.com', 'Membership Renewal', 'Hi, I want to know how I can renew my semester membership card online.', 'Replied', '2026-09-30')

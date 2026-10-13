@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Library Management System (SLMS) - Workflow & Architecture</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    @page {
+      size: A4;
+      margin: 15mm 16mm 15mm 16mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 9pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 10pt;
+      line-height: 1.55;
+      color: #1e293b;
+      background-color: #ffffff;
+    }
+
+    .doc-header {
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 18px;
+      margin-bottom: 25px;
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .pill-blue { background: #dbeafe; color: #1e40af; }
+    .pill-green { background: #dcfce7; color: #166534; }
+    .pill-amber { background: #fef3c7; color: #92400e; }
+    .pill-purple { background: #f3e8ff; color: #6b21a8; }
+
+    h1 {
+      font-size: 21pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .doc-subtitle {
+      font-size: 11pt;
+      color: #475569;
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 8.5pt;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: #64748b;
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .meta-item span {
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #0f172a;
+      border-bottom: 1.5px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin-top: 26px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      margin-bottom: 16px;
+      font-size: 8.5pt;
+      page-break-inside: auto;
+    }
+
+    tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      text-align: left;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    td {
+      padding: 7px 10px;
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+      color: #334155;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    td strong {
+      color: #0f172a;
+    }
+
+    .callout {
+      border-left: 4px solid #3b82f6;
+      background: #eff6ff;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      margin: 12px 0;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+    }
+
+    .callout-amber {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .callout-green {
+      border-left-color: #10b981;
+      background: #f0fdf4;
+    }
+
+    .callout strong {
+      color: #0f172a;
+    }
+
+    .mermaid-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0 16px 0;
+      text-align: center;
+      page-break-inside: avoid;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+
+    .mermaid svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+      font-size: 8pt;
+      background: #f1f5f9;
+      padding: 1.5px 5px;
+      border-radius: 4px;
+      color: #be185d;
+    }
+
+    .workflow-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+      background: #ffffff;
+    }
+
+    .workflow-title {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+
+    li {
+      margin-bottom: 4px;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="doc-header">
+    <div class="badge-bar">
+      <span class="pill pill-blue">Architecture Spec</span>
+      <span class="pill pill-green">Relational SQL Engine</span>
+      <span class="pill pill-amber">Reactive Dual-Sync</span>
+      <span class="pill pill-purple">PHP 8.x + Node.js</span>
+    </div>
+    <h1>🏛️ Smart Library Management System (SLMS)</h1>
+    <div class="doc-subtitle">Master System Architecture, Complete File Directory & End-to-End Workflow Specification</div>
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <strong>Author & Developer</strong>
+        <span>Meet Tailor (@MeetTailor-Data)</span>
+      </div>
+      <div class="meta-item">
+        <strong>Application Version</strong>
+        <span>Release 1.0.0 (Production)</span>
+      </div>
+      <div class="meta-item">
+        <strong>Database Engine</strong>
+        <span>Relational SQLite & MySQL (PDO)</span>
+      </div>
+      <div class="meta-item">
+        <strong>Server Runtime</strong>
+        <span>Node.js v24+ / PHP 8.x</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>📌 1. Executive Summary & Dual-Engine Architecture</h2>
+  <p>
+    The <strong>Smart Library Management System (SLMS)</strong> is a production-ready web application engineered to automate the complete lifecycle of library administration: book cataloging, member authentication, borrowing circulation, automated overdue fines calculation, and administrative inventory oversight.
+  </p>
+  <p>
+    The system utilizes a <strong>Dual-Engine Model</strong> offering maximum deployment flexibility:
+  </p>
+  <ul>
+    <li><strong>Engine A (Primary Local Engine — Node.js + SQLite):</strong> Runs natively via <code>server.js</code> on port <code>3000</code>. It requires zero third-party NPM packages, utilizing Node's built-in <code>node:sqlite</code> module to provide ACID-compliant relational SQL queries in <code>library.db</code>.</li>
+    <li><strong>Engine B (Web / Production Engine — PHP 8.x + PDO):</strong> Modular RESTful controllers under <code>backend/</code> supporting enterprise MySQL/MariaDB with automatic seamless fallback to a local SQLite database (<code>library.sqlite</code>).</li>
+    <li><strong>Reactive State Engine (<code>assets/js/slms-store.js</code>):</strong> Polls server endpoints every 3.5 seconds, bridges local browser storage cache with the SQL database, and broadcasts updates via window events (<code>slms_data_changed</code>).</li>
+  </ul>
+
+  <div class="mermaid-box">
+    <div class="mermaid">
+graph TD
+    Client["Client Browser (HTML5 + CSS3 + ES6+)"]
+
+    subgraph Frontend_Layer ["Frontend Application Layer"]
+        Pages["Pages/*.html (Catalog, Admin, Student, Auth, etc.)"]
+        AuthSession["assets/js/auth-session.js (RBAC & Session)"]
+        Store["assets/js/slms-store.js (Reactive Store & Sync)"]
+        Animations["assets/js/main-animations.js (UI Animations)"]
+    end
+
+    subgraph Server_Engine_A ["Engine A: Native Node.js Server (Port 3000)"]
+        NodeServer["server.js (HTTP Server + Static Router)"]
+        NodeSQLite["node:sqlite (DatabaseSync)"]
+        DBFile["library.db (SQLite Relational DB)"]
+    end
+
+    subgraph Server_Engine_B ["Engine B: PHP 8.x / Apache (Port 8000 / XAMPP)"]
+        IndexPhp["index.php (Auto-Router)"]
+        PHPControllers["backend/*.php (auth, books, circ, contact)"]
+        PDODatabase["backend/db.php (PDO Connection & Auto-Migrate)"]
+        MySQLDB[("MySQL / MariaDB: library_db")]
+        SQLiteFallback[("backend/library.sqlite")]
+    end
+
+    Client --> Pages
+    Pages --> AuthSession
+    Pages --> Store
+    Pages --> Animations
+
+    Store -- "HTTP Fetch /api/*" --> NodeServer
+    NodeServer --> NodeSQLite
+    NodeSQLite --> DBFile
+
+    Pages -- "Optional PHP Routes" --> PHPControllers
+    PHPControllers --> PDODatabase
+    PDODatabase --> MySQLDB
+    PDODatabase -.-> SQLiteFallback
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>📂 2. Exhaustive File-by-File Directory Breakdown</h2>
+  <p>Detailed documentation of every file in the repository, explaining its exact functional role and capabilities.</p>
+
+  <h3>2.1 Root Files</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 18%;">File Name</th>
+        <th style="width: 42%;">Purpose & Responsibilities</th>
+        <th style="width: 40%;">Key Endpoints & Operations</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>server.js</code></td>
+        <td>Zero-dependency HTTP server & relational SQLite database engine. Serves all static HTML/CSS/JS and exposes REST API endpoints.</td>
+        <td><code>/api/health</code>, <code>/api/auth/login</code>, <code>/api/auth/signup</code>, <code>/api/books</code>, <code>/api/circulation/issue</code>, <code>/api/circulation/return</code>, <code>/api/circulation/all</code>, <code>/api/circulation/student/:id</code>, <code>/api/admin/overview</code>, <code>/api/users/students</code>, <code>/api/messages</code>.</td>
+      </tr>
+      <tr>
+        <td><code>database.sql</code></td>
+        <td>Database schema DDL script and seed dataset. Defines tables, primary keys, auto-increment, unique constraints, and foreign key cascades.</td>
+        <td>Tables: <code>users</code>, <code>books</code>, <code>issued_books</code>, <code>messages</code>. Pre-seeded with 4 default users, 10 catalog books, and 3 circulation transactions.</td>
+      </tr>
+      <tr>
+        <td><code>index.php</code></td>
+        <td>Main entry-point redirector for Apache/PHP environments.</td>
+        <td>Issues HTTP 302 redirect header to <code>Pages/index.html</code>.</td>
+      </tr>
+      <tr>
+        <td><code>package.json</code></td>
+        <td>Project manifest defining application metadata and CLI scripts.</td>
+        <td><code>"scripts": { "start": "node server.js" }</code> for universal <code>npm start</code> execution.</td>
+      </tr>
+      <tr>
+        <td><code>vercel.json</code></td>
+        <td>Serverless platform deployment routing configuration.</td>
+        <td>Configures root routing <code>/</code> -&gt; <code>/Pages/index.html</code> and maps static assets.</td>
+      </tr>
+      <tr>
+        <td><code>library.db</code></td>
+        <td>SQLite relational binary database file managed by <code>server.js</code>.</td>
+        <td>Persists users, inventory, circulation records, and messages.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 Frontend Application (<code>Pages/</code>)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Page File</th>
+        <th style="width: 78%;">Features & Functionalities</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Pages/index.html</code></td>
+        <td><strong>Home / Landing Page:</strong> Displays responsive navigation, hero banner, library mission, services highlights, and a dynamically rendered 6-card featured catalog preview with real-time stock badges.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/catalog.html</code></td>
+        <td><strong>Live Book Catalog (OPAC):</strong> Search bar (title, author, ISBN) and category filter pills (All, Economics, Science, Technology, Literature, History). Includes interactive book modal and direct Borrow action.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/login.html</code></td>
+        <td><strong>Authentication Center:</strong> Dual-tab interface supporting both Student/Admin Login and new Student Registration. Features redirect retention (<code>?redirect=catalog.html</code>) and instant role routing.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/student-dashboard.html</code></td>
+        <td><strong>Student Portal:</strong> Personalized student space. 4 key metric cards, active borrowed books table with due date warnings and 1-click return, plus complete borrow history with fine details.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/admin-dashboard.html</code></td>
+        <td><strong>Librarian Control Panel:</strong> 5-tab interface: (1) Overview analytics & recent transactions, (2) Book Inventory CRUD & modal, (3) Circulation Issue/Return manager, (4) Registered Students directory, (5) Contact messages center.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/services.html</code></td>
+        <td><strong>Services & FAQ:</strong> Library facilities overview (computer lab, study rooms, archives) and interactive animated accordion FAQ answering circulation rules.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/aboutus.html</code></td>
+        <td><strong>About Library:</strong> Library vision, mission statement, core organizational values, and operational milestones.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/contect.html</code></td>
+        <td><strong>Contact Us:</strong> Physical address, hours, phone, and interactive query form submitting messages directly to the SQL database.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/blog.html</code></td>
+        <td><strong>News & Updates Feed:</strong> Library announcements, new book arrivals, events, and reading community articles.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/blog-post1.html</code></td>
+        <td><strong>Blog Article View:</strong> Full article reading view with featured photography and author credits.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+  <h3>2.3 Backend Engine (<code>backend/</code>)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Backend File</th>
+        <th style="width: 78%;">Responsibilities & Controller Logic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>backend/config.php</code></td>
+        <td>Database configuration matrix. Reads environment variables (<code>DB_HOST</code>, <code>DB_NAME</code>, etc.) or sets local defaults. Configures SQLite fallback path.</td>
+      </tr>
+      <tr>
+        <td><code>backend/db.php</code></td>
+        <td>PDO connection factory, schema migrator, automated table creator, fine computation engine (<code>calculate_overdue_fine()</code> at ₹5/day), session validators, and JSON response helper.</td>
+      </tr>
+      <tr>
+        <td><code>backend/auth.php</code></td>
+        <td>Handles <code>action=login</code>, <code>action=signup</code>, <code>action=logout</code>, and <code>action=get_user</code>. Validates unique IDs, hashes passwords, and starts PHP sessions.</td>
+      </tr>
+      <tr>
+        <td><code>backend/books.php</code></td>
+        <td>Inventory controller: <code>action=list</code> (with search/category filters), <code>action=get</code>, <code>action=add</code> (validating ISBN uniqueness), <code>action=edit</code>, and <code>action=delete</code>.</td>
+      </tr>
+      <tr>
+        <td><code>backend/circulation.php</code></td>
+        <td>Circulation controller: <code>action=issue</code> (validating student existence, max 3-book limit, duplicate issue check, and decrementing stock), <code>action=return</code> (restores stock), <code>action=student_borrows</code>, and <code>action=list_all</code>.</td>
+      </tr>
+      <tr>
+        <td><code>backend/contact.php</code></td>
+        <td>Inquiries controller: <code>action=submit</code> (saves user message to SQL) and <code>action=list</code> (loads all messages for the admin panel).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2.4 Assets (<code>assets/</code>)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Asset File</th>
+        <th style="width: 78%;">Features & Functionalities</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>assets/css/style.css</code></td>
+        <td>Central design system. Defines color tokens, responsive grid layouts, card designs, badges (<code>badge-available</code>, <code>badge-issued</code>, <code>badge-overdue</code>), modal dialogues, mobile hamburger menu animations, and media queries.</td>
+      </tr>
+      <tr>
+        <td><code>assets/js/slms-store.js</code></td>
+        <td>Centralized Reactive State Engine. Automatically polls <code>/api/*</code> every 3.5s, keeps localStorage updated, handles CRUD operations, enforces 3-book limit and 14-day due date calculation, and dispatches <code>slms_data_changed</code> events.</td>
+      </tr>
+      <tr>
+        <td><code>assets/js/auth-session.js</code></td>
+        <td>Session and RBAC manager. Updates navbar buttons based on logged-in role (Admin vs Student vs Guest), protects book borrowing behind student authentication, and injects the 3-line mobile hamburger menu.</td>
+      </tr>
+      <tr>
+        <td><code>assets/js/main-animations.js</code></td>
+        <td>UI micro-animations: IntersectionObserver scroll-reveal, navbar elevation shadow on scroll, floating back-to-top button, animated number counters, and accordion FAQ toggles.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>🔄 3. End-to-End User Workflows</h2>
+
+  <div class="workflow-card">
+    <div class="workflow-title">Workflow 1: Public Discovery & Catalog Exploration (Guest Journey)</div>
+    <p>Visitors can search the full catalog, filter by subject category, and preview book details without logging in.</p>
+    <ol>
+      <li>Visitor navigates to <code>http://localhost:3000</code>.</li>
+      <li>Home page loads and dynamically renders 6 featured catalog cards with real-time availability badges.</li>
+      <li>Visitor clicks "Explore Full Catalog" and is routed to <code>Pages/catalog.html</code>.</li>
+      <li>Visitor types keywords into the search box or clicks category buttons (Economics, Science, Technology, etc.).</li>
+      <li>Catalog grid dynamically re-renders in real-time matching the filter criteria.</li>
+      <li>Clicking a book opens the detail modal displaying cover, author, ISBN, stock, and synopsis.</li>
+    </ol>
+    <div class="mermaid-box">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Guest as Public Visitor
+    participant Home as Pages/index.html
+    participant Catalog as Pages/catalog.html
+    participant Store as assets/js/slms-store.js
+
+    Guest->>Home: Opens http://localhost:3000
+    Home->>Store: getBooks()
+    Store-->>Home: Cached & Synced Books List
+    Home->>Home: Renders 6 Featured Books + Stock Badges
+    Guest->>Catalog: Clicks "Explore Full Catalog"
+    Catalog->>Store: getBooks()
+    Catalog->>Catalog: filterBooks() on search/category click
+    Guest->>Catalog: Clicks Book Card
+    Catalog->>Catalog: Opens Book Details Modal
+      </div>
+    </div>
+  </div>
+
+  <div class="workflow-card">
+    <div class="workflow-title">Workflow 2: Role-Based Authentication & Navigation Routing</div>
+    <p>Unified portal handling both Student and Admin credentials with auto-routing.</p>
+    <div class="mermaid-box">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as User / Student / Admin
+    participant Login as Pages/login.html
+    participant AuthSession as assets/js/auth-session.js
+    participant Server as server.js (/api/auth/*)
+    participant StudentDash as Pages/student-dashboard.html
+    participant AdminDash as Pages/admin-dashboard.html
+
+    User->>Login: Navigates to login.html
+    alt Student Signup
+        User->>Login: Submits Signup Form (Name, ID, Email, Password)
+        Login->>Server: POST /api/auth/signup
+        Server-->>Login: 200 OK (Registered in SQL)
+        Login->>AuthSession: setCurrentUser({ role: 'student', studentId, name })
+        Login->>StudentDash: Redirects to student-dashboard.html
+    else Student Login
+        User->>Login: Enters ID (STU105) & Password (meet2006)
+        Login->>Server: POST /api/auth/login
+        Server-->>Login: 200 OK (Authenticated)
+        Login->>AuthSession: setCurrentUser(studentUser)
+        Login->>StudentDash: Redirects to student-dashboard.html
+    else Admin Login
+        User->>Login: Enters ADMIN01 & admin123
+        Login->>Server: POST /api/auth/login
+        Server-->>Login: 200 OK (Admin Authenticated)
+        Login->>AuthSession: setCurrentUser({ role: 'admin' })
+        Login->>AdminDash: Redirects to admin-dashboard.html
+    end
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+  <div class="workflow-card">
+    <div class="workflow-title">Workflow 3: Book Borrowing & Circulation Lifecycle</div>
+    <p>Enforces student login, verifies borrow limits (max 3 books), checks available stock, and calculates 14-day due dates.</p>
+    <div class="mermaid-box">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Student as Student
+    participant Catalog as Pages/catalog.html
+    participant Auth as assets/js/auth-session.js
+    participant Store as assets/js/slms-store.js
+    participant Server as server.js (/api/circulation/issue)
+    participant DB as library.db (SQLite)
+    participant Dash as Pages/student-dashboard.html
+
+    Student->>Catalog: Clicks "Borrow" button on book
+    Catalog->>Auth: attemptBorrowBook(bookTitle, isbn)
+    Auth->>Auth: Validate getCurrentUser()
+    alt Not Logged In
+        Auth-->>Student: Alert: "Login Required" -> Redirects to login.html?redirect=catalog.html
+    else Logged in as Student
+        Auth->>Store: issueBook(studentId, isbn)
+        Store->>Store: Check active borrows (Rule: Max 3)
+        Store->>Store: Check duplicate checkout of same ISBN
+        Store->>Store: Check availableCopies > 0
+        Store->>Store: Decrement availableCopies by 1
+        Store->>Store: Set Due Date = Current Date + 14 Days
+        Store->>Server: POST /api/circulation/issue
+        Server->>DB: SQL Transaction: UPDATE books stock & INSERT issued_books
+        Server-->>Store: 200 OK
+        Store-->>Auth: Success confirmation
+        Auth-->>Student: Alert: "Book successfully issued! Due on DD/MM/YYYY"
+        Auth->>Dash: Redirects to student-dashboard.html
+    end
+      </div>
+    </div>
+  </div>
+
+  <div class="workflow-card">
+    <div class="workflow-title">Workflow 4: Student Dashboard & Book Returns</div>
+    <p>Provides active borrow tracking, return due date countdowns, overdue penalties, and 1-click book return.</p>
+    <div class="mermaid-box">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Student as Student
+    participant Dash as Pages/student-dashboard.html
+    participant Store as assets/js/slms-store.js
+    participant Server as server.js (/api/circulation/return)
+    participant DB as library.db
+
+    Student->>Dash: Opens student-dashboard.html
+    Dash->>Store: getStudentActiveBorrows(studentId)
+    Dash->>Store: getStudentHistory(studentId)
+    Dash->>Dash: Renders active table with Due Soon or Overdue badges
+    opt Student Returns Book
+        Student->>Dash: Clicks "Return Book" button
+        Dash->>Store: returnBook(circulationId)
+        Store->>Store: Set status = 'Returned', returnDate = Today
+        Store->>Store: Increment book availableCopies by 1
+        Store->>Server: POST /api/circulation/return { issue_id }
+        Server->>DB: UPDATE issued_books SET status='Returned' & UPDATE books stock +1
+        Server-->>Store: 200 OK
+        Store-->>Store: Trigger 'slms_data_changed' event
+        Dash->>Dash: Re-renders tables with updated counts
+        Dash-->>Student: Alert: "Book marked as Returned. Inventory restored."
+    end
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+  <div class="workflow-card">
+    <div class="workflow-title">Workflow 5: Librarian Administration & Inventory Control</div>
+    <p>Complete administrative control panel for book inventory CRUD, manual issue/return, member list, and messages.</p>
+    <div class="mermaid-box">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Admin as Librarian (Admin)
+    participant Panel as Pages/admin-dashboard.html
+    participant Store as assets/js/slms-store.js
+    participant Server as server.js
+    participant DB as library.db
+
+    Admin->>Panel: Navigates to admin-dashboard.html
+    Panel->>Server: GET /api/admin/overview
+    Server->>DB: Query book totals, active issues, student counts, overdue count
+    Server-->>Panel: Returns Overview statistics
+
+    alt Tab 2: Inventory Management
+        Admin->>Panel: Selects "Book Inventory" tab
+        Admin->>Panel: Clicks "+ Add Book" & fills Title, Author, ISBN, Copies
+        Panel->>Store: addBook(bookData)
+        Store->>Server: POST /api/books
+        Server->>DB: INSERT INTO books ...
+        Panel->>Panel: Live inventory table updates
+    else Tab 3: Manual Issue & Return
+        Admin->>Panel: Selects "Issue & Return" tab
+        Admin->>Panel: Clicks "Issue Book" (Inputs Student ID + ISBN + Custom Due Date)
+        Panel->>Store: issueBook(studentId, isbn, customDueDate)
+        Store->>Server: POST /api/circulation/issue
+        Server-->>Panel: Transaction logged
+    else Tab 4: Student Directory
+        Admin->>Panel: Views registered students list & departments
+    else Tab 5: Contact Messages
+        Admin->>Panel: Reviews incoming inquiries from contect.html
+    end
+      </div>
+    </div>
+  </div>
+
+  <div class="workflow-card">
+    <div class="workflow-title">Workflow 6: Inquiries & Contact Form Workflow</div>
+    <p>Public inquiries submitted via contact page are securely stored in SQL and visible in the Admin Panel.</p>
+    <div class="mermaid-box">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Visitor as Visitor / Student
+    participant Contact as Pages/contect.html
+    participant Store as assets/js/slms-store.js
+    participant Server as server.js (/api/messages)
+    participant DB as library.db (messages table)
+    participant Admin as Pages/admin-dashboard.html
+
+    Visitor->>Contact: Submits form (Name, Email, Subject, Message)
+    Contact->>Store: addMessage(msgData)
+    Contact->>Server: POST /api/messages
+    Server->>DB: INSERT INTO messages (name, email, subject, message, status, created_at)
+    Server-->>Contact: 200 OK
+    Contact-->>Visitor: Displays success alert: "Message sent successfully!"
+    Admin->>Admin: Admin opens "Contact Messages" tab
+    Admin->>Store: getMessages()
+    Store-->>Admin: Displays unread message badge and inquiry details
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>⚙️ 4. Business Rules & Automation Matrix</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Rule Name</th>
+        <th style="width: 50%;">Business Logic & Conditions</th>
+        <th style="width: 25%;">Enforcement Location</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Default Due Date</strong></td>
+        <td>Every issued book is automatically assigned a return deadline exactly <strong>14 days</strong> from checkout date (<code>issue_date + 14 days</code>).</td>
+        <td><code>slms-store.js:643</code><br><code>server.js:358</code><br><code>circulation.php:127</code></td>
+      </tr>
+      <tr>
+        <td><strong>Borrow Limit</strong></td>
+        <td>A student can hold a maximum of <strong>3 active books</strong> simultaneously. Additional checkout attempts are blocked with an informative limit alert.</td>
+        <td><code>slms-store.js:613</code><br><code>server.js:333</code><br><code>circulation.php:80</code></td>
+      </tr>
+      <tr>
+        <td><strong>Duplicate Borrow Prevention</strong></td>
+        <td>A student cannot check out a second copy of an ISBN they currently hold until the existing copy is returned.</td>
+        <td><code>slms-store.js:619</code><br><code>server.js:340</code><br><code>circulation.php:91</code></td>
+      </tr>
+      <tr>
+        <td><strong>Real-Time Stock Sync</strong></td>
+        <td>Issuing a book automatically decrements <code>available_copies</code> by 1. Returning increments it by 1 (capped at <code>total_copies</code>). Zero stock books are disabled.</td>
+        <td><code>slms-store.js:635</code><br><code>server.js:354</code><br><code>circulation.php:60</code></td>
+      </tr>
+      <tr>
+        <td><strong>Automated Fine Engine</strong></td>
+        <td>Calculates penalty charges of <strong>₹5 per day</strong> for every day a book is returned after its due date (<code>(return_date - due_date) * 5</code>).</td>
+        <td><code>db.php:209</code><br><code>server.js:54</code><br><code>student-dashboard.html</code></td>
+      </tr>
+      <tr>
+        <td><strong>Authentication Gate</strong></td>
+        <td>Guests may browse the catalog freely, but clicking "Borrow Book" prompts a login modal and redirects back after authentication.</td>
+        <td><code>auth-session.js:106</code></td>
+      </tr>
+      <tr>
+        <td><strong>Reactive Dual-Sync</strong></td>
+        <td>Background polling every 3.5 seconds synchronizes browser cache with SQL tables and emits <code>slms_data_changed</code> events across tabs.</td>
+        <td><code>slms-store.js:382</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>🚀 5. Execution & Verification Guide</h2>
+  <div class="callout callout-green">
+    <strong>Zero Setup Native Server:</strong> Start the relational SQL engine instantly by running:
+    <br><code>npm start</code> <em>(or <code>node server.js</code>)</em>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Portal / Page</th>
+        <th style="width: 45%;">Local URL</th>
+        <th style="width: 30%;">Credentials & Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Public Home</strong></td>
+        <td><code>http://localhost:3000</code></td>
+        <td>Guest / Public</td>
+      </tr>
+      <tr>
+        <td><strong>Book Catalog</strong></td>
+        <td><code>http://localhost:3000/Pages/catalog.html</code></td>
+        <td>Guest & Student</td>
+      </tr>
+      <tr>
+        <td><strong>Login & Signup</strong></td>
+        <td><code>http://localhost:3000/Pages/login.html</code></td>
+        <td>All Users</td>
+      </tr>
+      <tr>
+        <td><strong>Admin Dashboard</strong></td>
+        <td><code>http://localhost:3000/Pages/admin-dashboard.html</code></td>
+        <td><code>ADMIN01</code> / <code>admin123</code></td>
+      </tr>
+      <tr>
+        <td><strong>Student Dashboard</strong></td>
+        <td><code>http://localhost:3000/Pages/student-dashboard.html</code></td>
+        <td><code>STU105</code> / <code>meet2006</code><br><em>(or <code>STU101</code> / <code>student123</code>)</em></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      themeVariables: {
+        fontSize: '11px',
+        fontFamily: 'Inter, sans-serif'
+      }
+    });
+  </script>
+</body>
+</html>

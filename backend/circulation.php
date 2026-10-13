@@ -1,8 +1,4 @@
 <?php
-/**
- * Smart Library Management System - Circulation Controller (SQL PDO)
- * Handles Book Issue, Return, Stock Sync, Limits, and Automated Fine Calculations.
- */
 
 require_once __DIR__ . '/db.php';
 
@@ -29,7 +25,6 @@ switch ($action) {
         json_response(false, 'Invalid circulation action specified.', null, 400);
 }
 
-// 1. Issue Book to Student
 function issue_book() {
     $studentId = strtoupper(trim($_POST['student_id'] ?? ''));
     $bookId = (int)($_POST['book_id'] ?? 0);
@@ -42,7 +37,6 @@ function issue_book() {
 
     $db = get_db();
 
-    // 1. Find the target book
     if ($bookId > 0) {
         $stmt = $db->prepare("SELECT * FROM books WHERE id = ? LIMIT 1");
         $stmt->execute([$bookId]);
@@ -56,12 +50,10 @@ function issue_book() {
         json_response(false, 'Requested book not found in library inventory.', null, 404);
     }
 
-    // 2. Check stock availability
     if ((int)$book['available_copies'] <= 0) {
         json_response(false, "Sorry, '{$book['title']}' is currently out of stock (0 available).", null, 400);
     }
 
-    // 3. Enforce Borrow Limit (Max 3 active books per student)
     $countStmt = $db->prepare("SELECT COUNT(*) FROM issued_books WHERE LOWER(user_id) = LOWER(?) AND status != 'Returned'");
     $countStmt->execute([$studentId]);
     $activeCount = (int)$countStmt->fetchColumn();
@@ -70,14 +62,12 @@ function issue_book() {
         json_response(false, "Borrow limit exceeded: Student ({$studentId}) already has 3 active borrowed books. Please return a book first.", null, 400);
     }
 
-    // 4. Prevent duplicate issuing of the exact same book
     $dupStmt = $db->prepare("SELECT id FROM issued_books WHERE LOWER(user_id) = LOWER(?) AND book_id = ? AND status != 'Returned' LIMIT 1");
     $dupStmt->execute([$studentId, $book['id']]);
     if ($dupStmt->fetch()) {
         json_response(false, "Duplicate checkout: Student ({$studentId}) already has an active copy of '{$book['title']}'.", null, 400);
     }
 
-    // 5. Execute transaction: Decrement book stock & create issue record
     try {
         $db->beginTransaction();
 
@@ -121,7 +111,6 @@ function issue_book() {
     }
 }
 
-// 2. Return Book
 function return_book() {
     $issueId = (int)($_POST['issue_id'] ?? 0);
     $db = get_db();
@@ -141,17 +130,15 @@ function return_book() {
     try {
         $db->beginTransaction();
 
-        // 1. Mark issue as returned
         $updateIssueStmt = $db->prepare("UPDATE issued_books SET return_date = ?, status = 'Returned', fine = ? WHERE id = ?");
         $updateIssueStmt->execute([$returnDate, $fineAmount, $issueId]);
 
-        // 2. Restore available copy count in books table
         $updateBookStmt = $db->prepare("UPDATE books SET available_copies = LEAST(total_copies, available_copies + 1) WHERE id = ?");
         $updateBookStmt->execute([$issue['book_id']]);
 
         $db->commit();
 
-        $msg = $fineInfo['is_overdue'] 
+        $msg = $fineInfo['is_overdue']
             ? "Book returned with overdue fine of ₹{$fineAmount} for {$fineInfo['overdue_days']} late days."
             : "Book returned on time! Stock count restored.";
 
@@ -167,7 +154,6 @@ function return_book() {
     }
 }
 
-// 3. Get Student Active & Historical Borrows
 function get_student_borrows() {
     $studentId = strtoupper(trim($_GET['student_id'] ?? ''));
 
@@ -197,7 +183,6 @@ function get_student_borrows() {
     json_response(true, 'Student borrow history loaded.', $studentBorrows);
 }
 
-// 4. List All Circulation for Admin Panel
 function list_all_circulation() {
     $db = get_db();
     $stmt = $db->query("SELECT * FROM issued_books ORDER BY id DESC");
