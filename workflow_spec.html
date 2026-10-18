@@ -266,10 +266,10 @@
       <span class="pill pill-blue">Architecture Spec</span>
       <span class="pill pill-green">Relational SQL Engine</span>
       <span class="pill pill-amber">Reactive Dual-Sync</span>
-      <span class="pill pill-purple">PHP 8.x + Node.js</span>
+      <span class="pill pill-purple">Render Cloud Live</span>
     </div>
     <h1>🏛️ Smart Library Management System (SLMS)</h1>
-    <div class="doc-subtitle">Master System Architecture, Complete File Directory & End-to-End Workflow Specification</div>
+    <div class="doc-subtitle">Master System Architecture, Complete File Directory, Team Distribution & End-to-End Workflow Specification</div>
 
     <div class="meta-grid">
       <div class="meta-item">
@@ -285,8 +285,8 @@
         <span>Relational SQLite & MySQL (PDO)</span>
       </div>
       <div class="meta-item">
-        <strong>Server Runtime</strong>
-        <span>Node.js v24+ / PHP 8.x</span>
+        <strong>Live Production URL</strong>
+        <span>library-management-system-1-1ep1.onrender.com</span>
       </div>
     </div>
   </div>
@@ -381,14 +381,24 @@ graph TD
         <td><code>"scripts": { "start": "node server.js" }</code> for universal <code>npm start</code> execution.</td>
       </tr>
       <tr>
+        <td><code>render.yaml</code></td>
+        <td>Infrastructure-as-Code Blueprint for Render Web Service cloud deployment. Specifies Node 22 environment in Singapore region.</td>
+        <td>Configures auto-deploy on git push, health checks, and binds to <code>0.0.0.0:$PORT</code>.</td>
+      </tr>
+      <tr>
         <td><code>vercel.json</code></td>
         <td>Serverless platform deployment routing configuration.</td>
         <td>Configures root routing <code>/</code> -&gt; <code>/Pages/index.html</code> and maps static assets.</td>
       </tr>
       <tr>
         <td><code>library.db</code></td>
-        <td>SQLite relational binary database file managed by <code>server.js</code>.</td>
-        <td>Persists users, inventory, circulation records, and messages.</td>
+        <td>SQLite relational binary database file managed natively by <code>server.js</code>.</td>
+        <td>Persists users, catalog inventory, circulation records, and contact messages.</td>
+      </tr>
+      <tr>
+        <td><code>project_distribution_poster.html</code></td>
+        <td>Visual 4K presentation poster and print asset defining the 4-person team module distribution and viva defense talking points.</td>
+        <td>Accompanied by high-resolution presentation artifact <code>project_distribution_team_of_4.png</code>.</td>
       </tr>
     </tbody>
   </table>
@@ -775,43 +785,120 @@ sequenceDiagram
 
   <h2>🚀 5. Execution & Verification Guide</h2>
   <div class="callout callout-green">
-    <strong>Zero Setup Native Server:</strong> Start the relational SQL engine instantly by running:
-    <br><code>npm start</code> <em>(or <code>node server.js</code>)</em>
+    <strong>Live Cloud Web Service:</strong> Production application deployed and running globally on Render:
+    <br><a href="https://library-management-system-1-1ep1.onrender.com" target="_blank" style="color:#047857; font-weight:700;">https://library-management-system-1-1ep1.onrender.com</a>
+  </div>
+
+  <div class="callout callout-blue" style="border-left: 4px solid #3b82f6; background: #eff6ff; padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 8.5pt;">
+    <strong>Local Zero-Dependency Run:</strong> Execute <code>npm start</code> (or <code>node server.js</code>). Accessible on <code>http://localhost:3000</code>.
+    <br><strong>College / Lab Environment:</strong> Drop into XAMPP <code>htdocs/library</code> and browse <code>http://localhost/library/</code> (auto-redirects to <code>Pages/index.html</code>).
   </div>
 
   <table>
     <thead>
       <tr>
-        <th style="width: 25%;">Portal / Page</th>
-        <th style="width: 45%;">Local URL</th>
-        <th style="width: 30%;">Credentials & Role</th>
+        <th style="width: 24%;">Portal / Page</th>
+        <th style="width: 44%;">Live & Local Endpoints</th>
+        <th style="width: 32%;">Credentials & Role</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><strong>Public Home</strong></td>
-        <td><code>http://localhost:3000</code></td>
-        <td>Guest / Public</td>
+        <td><code>/</code> or <code>/Pages/index.html</code></td>
+        <td>Guest / Public Discovery</td>
       </tr>
       <tr>
         <td><strong>Book Catalog</strong></td>
-        <td><code>http://localhost:3000/Pages/catalog.html</code></td>
-        <td>Guest & Student</td>
+        <td><code>/Pages/catalog.html</code></td>
+        <td>Guest & Authenticated Students</td>
       </tr>
       <tr>
         <td><strong>Login & Signup</strong></td>
-        <td><code>http://localhost:3000/Pages/login.html</code></td>
-        <td>All Users</td>
+        <td><code>/Pages/login.html</code></td>
+        <td>All System Users</td>
       </tr>
       <tr>
         <td><strong>Admin Dashboard</strong></td>
-        <td><code>http://localhost:3000/Pages/admin-dashboard.html</code></td>
-        <td><code>ADMIN01</code> / <code>admin123</code></td>
+        <td><code>/Pages/admin-dashboard.html</code></td>
+        <td><code>ADMIN01</code> / <code>admin123</code> (Librarian)</td>
       </tr>
       <tr>
         <td><strong>Student Dashboard</strong></td>
-        <td><code>http://localhost:3000/Pages/student-dashboard.html</code></td>
+        <td><code>/Pages/student-dashboard.html</code></td>
         <td><code>STU105</code> / <code>meet2006</code><br><em>(or <code>STU101</code> / <code>student123</code>)</em></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>👥 6. 4-Person Project Module Distribution & Viva Defense Matrix</h2>
+  <p>Modular division of engineering responsibilities for team defense, laboratory evaluation, and code review:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 14%;">Team Member</th>
+        <th style="width: 24%;">Module & Role Title</th>
+        <th style="width: 34%;">Owned Source Files & Components</th>
+        <th style="width: 28%;">Key Viva Defense Topics</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Person 1</strong></td>
+        <td><strong>Public Portal, Catalog & UI/UX</strong><br><span style="font-size:7.5pt; color:#2563eb; font-weight:600;">Guest Journey & Discovery</span></td>
+        <td>
+          <code>Pages/index.html</code><br>
+          <code>Pages/catalog.html</code><br>
+          <code>Pages/aboutus.html</code>, <code>services.html</code>, <code>contect.html</code>, <code>blog*.html</code><br>
+          <code>assets/css/style.css</code><br>
+          <code>assets/js/main-animations.js</code>
+        </td>
+        <td>
+          Responsive CSS design system, CSS Grid/Flexbox, real-time live search & category filters, modal dialogs, IntersectionObserver animations, mobile hamburger menu.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Person 2</strong></td>
+        <td><strong>Auth & Student Portal</strong><br><span style="font-size:7.5pt; color:#059669; font-weight:600;">RBAC & Student Borrows</span></td>
+        <td>
+          <code>Pages/login.html</code><br>
+          <code>Pages/student-dashboard.html</code><br>
+          <code>assets/js/auth-session.js</code><br>
+          <code>backend/auth.php</code><br>
+          <code>server.js</code> (/api/auth/*)
+        </td>
+        <td>
+          Role-Based Access Control (Admin vs Student), dual-tab login & registration, session token persistence, borrow limit (max 3 books), student active borrow tracking.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Person 3</strong></td>
+        <td><strong>Admin Panel & Inventory</strong><br><span style="font-size:7.5pt; color:#7c3aed; font-weight:600;">Librarian Management</span></td>
+        <td>
+          <code>Pages/admin-dashboard.html</code><br>
+          <code>backend/books.php</code><br>
+          <code>backend/contact.php</code><br>
+          <code>server.js</code> (/api/admin/*, /api/books, /api/messages)
+        </td>
+        <td>
+          5-tab administrative workflow, real-time library analytics, Book Inventory CRUD operations, ISBN uniqueness enforcement, stock management, student directory, user inquiries.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Person 4</strong></td>
+        <td><strong>Circulation, Fines & Database</strong><br><span style="font-size:7.5pt; color:#d97706; font-weight:600;">ACID Engine & Deployment</span></td>
+        <td>
+          <code>server.js</code> (Core Engine)<br>
+          <code>backend/circulation.php</code>, <code>backend/db.php</code><br>
+          <code>database.sql</code>, <code>library.db</code><br>
+          <code>assets/js/slms-store.js</code> (Dual-Sync)<br>
+          <code>render.yaml</code>, <code>vercel.json</code>
+        </td>
+        <td>
+          Relational SQL schema design, foreign keys & cascades, ACID issue/return transactions, automated ₹5/day fine algorithm, 3.5s reactive dual-sync state engine, Render Web Service cloud CI/CD.
+        </td>
       </tr>
     </tbody>
   </table>
