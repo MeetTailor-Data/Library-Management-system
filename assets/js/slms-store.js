@@ -405,21 +405,45 @@
           let currentUsers = getRaw(STORAGE_KEYS.USERS, DEFAULT_USERS);
           uData.data.forEach(dbStu => {
             const idx = currentUsers.findIndex(u => (u.studentId && u.studentId.toUpperCase() === dbStu.studentId.toUpperCase()));
+            const dept = dbStu.department || (idx !== -1 && currentUsers[idx].department ? currentUsers[idx].department : 'Computer Science');
+            const yr = dbStu.year || (idx !== -1 && currentUsers[idx].year ? currentUsers[idx].year : '1st Year');
             if (idx === -1) {
               currentUsers.push({
                 id: dbStu.id,
                 studentId: dbStu.studentId,
                 name: dbStu.name,
                 email: dbStu.email,
+                department: dept,
+                year: yr,
                 role: 'student',
                 status: 'Active'
               });
             } else {
               currentUsers[idx].name = dbStu.name;
               currentUsers[idx].email = dbStu.email;
+              currentUsers[idx].department = dept;
+              currentUsers[idx].year = yr;
             }
           });
           localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(currentUsers));
+        }
+      }
+
+      const mRes = await fetch('/api/messages');
+      if (mRes.ok) {
+        const mData = await mRes.json();
+        if (mData.status && Array.isArray(mData.data)) {
+          const mappedMsgs = mData.data.map(m => ({
+            id: m.id,
+            name: m.name,
+            email: m.email,
+            subject: m.subject || 'General Inquiry',
+            message: m.message,
+            date: m.date || m.created_at || new Date().toLocaleDateString('en-GB'),
+            created_at: m.created_at || m.date,
+            status: m.status || 'Unread'
+          }));
+          localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(mappedMsgs));
         }
       }
 
@@ -692,13 +716,28 @@
         id: newId,
         name: msgData.name.trim(),
         email: msgData.email.trim(),
-        subject: msgData.subject.trim(),
+        subject: (msgData.subject || 'General Inquiry').trim(),
         message: msgData.message.trim(),
         date: new Date().toLocaleDateString('en-GB'),
+        created_at: new Date().toLocaleDateString('en-GB'),
         status: 'Unread'
       };
       msgs.unshift(newMsg);
       setRaw(STORAGE_KEYS.MESSAGES, msgs);
+
+      fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMsg)
+      }).then(() => syncWithBackend()).catch(() => {
+        const fd = new FormData();
+        fd.append('name', newMsg.name);
+        fd.append('email', newMsg.email);
+        fd.append('subject', newMsg.subject);
+        fd.append('message', newMsg.message);
+        fetch('/backend/contact.php?action=submit', { method: 'POST', body: fd }).catch(() => {});
+      });
+
       return newMsg;
     },
 
@@ -708,6 +747,12 @@
       if (idx !== -1) {
         msgs[idx].status = 'Replied';
         setRaw(STORAGE_KEYS.MESSAGES, msgs);
+
+        fetch('/api/messages?action=reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        }).catch(() => {});
       }
     },
 
@@ -715,6 +760,12 @@
       let msgs = this.getMessages();
       msgs = msgs.filter(m => m.id !== id && m.id !== parseInt(id, 10));
       setRaw(STORAGE_KEYS.MESSAGES, msgs);
+
+      fetch('/api/messages?action=delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      }).catch(() => {});
     },
 
     getOverviewStats() {

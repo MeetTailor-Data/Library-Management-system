@@ -572,10 +572,10 @@ sequenceDiagram
 
     User->>Login: Navigates to login.html
     alt Student Signup
-        User->>Login: Submits Signup Form (Name, ID, Email, Password)
-        Login->>Server: POST /api/auth/signup
-        Server-->>Login: 200 OK (Registered in SQL)
-        Login->>AuthSession: setCurrentUser({ role: 'student', studentId, name })
+        User->>Login: Submits Signup Form (Name, ID, Email, Dept, Year, Password)
+        Login->>Server: POST /api/auth/signup (Includes Department & Academic Year)
+        Server-->>Login: 200 OK (Registered in SQL users table)
+        Login->>AuthSession: setCurrentUser({ role: 'student', studentId, name, department, year })
         Login->>StudentDash: Redirects to student-dashboard.html
     else Student Login
         User->>Login: Enters ID (STU105) & Password (meet2006)
@@ -722,14 +722,19 @@ sequenceDiagram
     participant Admin as Pages/admin-dashboard.html
 
     Visitor->>Contact: Submits form (Name, Email, Subject, Message)
-    Contact->>Store: addMessage(msgData)
+    Contact->>Store: addMessage(msgData) (Optimistic Local Cache)
     Contact->>Server: POST /api/messages
     Server->>DB: INSERT INTO messages (name, email, subject, message, status, created_at)
-    Server-->>Contact: 200 OK
+    Server-->>Contact: 200 OK (Persisted in SQL)
     Contact-->>Visitor: Displays success alert: "Message sent successfully!"
     Admin->>Admin: Admin opens "Contact Messages" tab
-    Admin->>Store: getMessages()
-    Store-->>Admin: Displays unread message badge and inquiry details
+    Admin->>Store: getMessages() (Real-time SQL Poll every 3.5s)
+    Store-->>Admin: Displays message feed with Unread / Replied badges
+    opt Reply or Delete Message
+        Admin->>Server: POST /api/messages?action=reply / action=delete
+        Server->>DB: UPDATE / DELETE from messages table
+        Server-->>Admin: 200 OK (Live Table Refresh)
+    end
       </div>
     </div>
   </div>

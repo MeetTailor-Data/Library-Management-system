@@ -140,16 +140,41 @@
     <form id="signupForm" action="../backend/auth.php" method="POST" onsubmit="return handleSignup(event)">
       <input type="hidden" name="action" value="signup">
       <div class="input-box">
-        <input type="text" name="full_name" id="signupName" placeholder="Full Name" required />
+        <input type="text" name="full_name" id="signupName" placeholder="Full Name (e.g. Rahul Sharma)" required />
       </div>
       <div class="input-box">
-        <input type="text" name="student_id" id="signupId" placeholder="Student ID (e.g. STU105)" required />
+        <input type="text" name="student_id" id="signupId" placeholder="Student ID (e.g. STU106)" required />
       </div>
       <div class="input-box">
-        <input type="email" name="email" id="signupEmail" placeholder="Email Address" required />
+        <input type="email" name="email" id="signupEmail" placeholder="Email Address (e.g. student@library.edu)" required />
       </div>
       <div class="input-box">
-        <input type="password" name="password" id="signupPass" placeholder="Password" required />
+        <select name="department" id="signupDept" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; outline: none; background: #fff; font-size: 14px; color: #333; font-family: inherit;">
+          <option value="" disabled selected>-- Select Department --</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Information Technology">Information Technology</option>
+          <option value="Mechanical Engg.">Mechanical Engg.</option>
+          <option value="Electrical & Electronics">Electrical & Electronics</option>
+          <option value="Civil Engineering">Civil Engineering</option>
+          <option value="Economics">Economics</option>
+          <option value="Business Administration">Business Administration</option>
+          <option value="Science & Mathematics">Science & Mathematics</option>
+          <option value="Literature & Arts">Literature & Arts</option>
+        </select>
+      </div>
+      <div class="input-box">
+        <select name="year" id="signupYear" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; outline: none; background: #fff; font-size: 14px; color: #333; font-family: inherit;">
+          <option value="" disabled selected>-- Select Academic Year --</option>
+          <option value="1st Year">1st Year</option>
+          <option value="2nd Year">2nd Year</option>
+          <option value="3rd Year">3rd Year</option>
+          <option value="4th Year">4th Year</option>
+          <option value="Final Year">Final Year</option>
+          <option value="Postgraduate">Postgraduate</option>
+        </select>
+      </div>
+      <div class="input-box">
+        <input type="password" name="password" id="signupPass" placeholder="Create Password" required />
       </div>
       <div class="input-box">
         <input type="password" name="confirm_password" id="signupConfirmPass" placeholder="Confirm Password" required />
@@ -270,8 +295,21 @@
       const fullName = document.getElementById('signupName').value.trim();
       const stuId = document.getElementById('signupId').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
+      const deptSelect = document.getElementById('signupDept');
+      const yearSelect = document.getElementById('signupYear');
+      const department = deptSelect ? deptSelect.value : 'Computer Science';
+      const year = yearSelect ? yearSelect.value : '1st Year';
       const pass = document.getElementById('signupPass').value;
       const confirmPass = document.getElementById('signupConfirmPass').value;
+
+      if (!department) {
+        showAlert('Please select your Department.', true);
+        return false;
+      }
+      if (!year) {
+        showAlert('Please select your Academic Year.', true);
+        return false;
+      }
 
       if (pass !== confirmPass) {
         showAlert('Passwords do not match. Please try again.', true);
@@ -284,8 +322,8 @@
           name: fullName,
           email: email,
           password: pass,
-          department: 'Computer Science',
-          year: '1st Year'
+          department: department,
+          year: year
         });
         if (!res.success) {
           showAlert(res.message, true);
@@ -297,11 +335,13 @@
         role: 'student',
         studentId: stuId.toUpperCase(),
         name: fullName,
-        email: email
+        email: email,
+        department: department,
+        year: year
       };
 
       setCurrentUser(newStudent);
-      alert(`Account Created Successfully!\nYour assigned Student ID is: ${stuId.toUpperCase()}`);
+      alert(`Account Created Successfully!\nWelcome to the Library, ${fullName}!\nStudent ID: ${stuId.toUpperCase()} | ${department} (${year})`);
       window.location.href = 'student-dashboard.html';
       return false;
     }

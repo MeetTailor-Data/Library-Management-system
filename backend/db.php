@@ -79,6 +79,8 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         email VARCHAR(150) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'student',
+        department VARCHAR(100) NOT NULL DEFAULT 'Computer Science',
+        year VARCHAR(50) NOT NULL DEFAULT '1st Year',
         created_at DATE NOT NULL
     )");
 
@@ -121,11 +123,13 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
 
     $count = (int)$pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
     if ($count === 0) {
-        $stmt = $pdo->prepare("INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute(['ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', '2026-01-01']);
-        $stmt->execute(['STU101', 'John Doe', 'john@example.com', 'student123', 'student', '2026-02-15']);
-        $stmt->execute(['STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', '2026-03-10']);
-        $stmt->execute(['STU103', 'David Miller', 'david@example.com', 'student123', 'student', '2026-04-05']);
+        $stmt = $pdo->prepare("INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute(['ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01']);
+        $stmt->execute(['STU101', 'John Doe', 'john@example.com', 'student123', 'student', 'Computer Science', '3rd Year', '2026-02-15']);
+        $stmt->execute(['STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', 'Information Technology', '2nd Year', '2026-03-10']);
+        $stmt->execute(['STU103', 'David Miller', 'david@example.com', 'student123', 'student', 'Mechanical Engg.', '4th Year', '2026-04-05']);
+        $stmt->execute(['STU104', 'Ananya Verma', 'ananya@example.com', 'student123', 'student', 'Economics', '1st Year', '2026-04-20']);
+        $stmt->execute(['STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', 'Computer Science & Engg', 'Final Year', '2026-05-01']);
     }
 
     $bookCount = (int)$pdo->query("SELECT COUNT(*) FROM books")->fetchColumn();

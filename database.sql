@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email` VARCHAR(150) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
     `role` ENUM('admin', 'student') NOT NULL DEFAULT 'student',
+    `department` VARCHAR(100) NOT NULL DEFAULT 'Computer Science',
+    `year` VARCHAR(50) NOT NULL DEFAULT '1st Year',
     `created_at` DATE NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -51,11 +53,13 @@ CREATE TABLE IF NOT EXISTS `messages` (
     `created_at` DATE NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `password`, `role`, `created_at`) VALUES
-(1, 'ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', '2026-01-01'),
-(2, 'STU101', 'John Doe', 'john@example.com', 'student123', 'student', '2026-02-15'),
-(3, 'STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', '2026-03-10'),
-(4, 'STU103', 'David Miller', 'david@example.com', 'student123', 'student', '2026-04-05')
+INSERT INTO `users` (`id`, `user_id`, `name`, `email`, `password`, `role`, `department`, `year`, `created_at`) VALUES
+(1, 'ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01'),
+(2, 'STU101', 'John Doe', 'john@example.com', 'student123', 'student', 'Computer Science', '3rd Year', '2026-02-15'),
+(3, 'STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', 'Information Technology', '2nd Year', '2026-03-10'),
+(4, 'STU103', 'David Miller', 'david@example.com', 'student123', 'student', 'Mechanical Engg.', '4th Year', '2026-04-05'),
+(5, 'STU104', 'Ananya Verma', 'ananya@example.com', 'student123', 'student', 'Economics', '1st Year', '2026-04-20'),
+(6, 'STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', 'Computer Science & Engg', 'Final Year', '2026-05-01')
 ON DUPLICATE KEY UPDATE `user_id` = VALUES(`user_id`);
 
 INSERT INTO `books` (`id`, `title`, `author`, `category`, `isbn`, `total_copies`, `available_copies`, `image`, `description`) VALUES

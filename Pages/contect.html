@@ -54,7 +54,7 @@
           <input type="email" name="email" id="contactEmail" placeholder="Your Email Address" required>
           <input type="text" name="subject" id="contactSubject" placeholder="Subject / Inquiry Topic" required>
           <textarea name="message" id="contactMessage" rows="5" placeholder="Your Message or Book Query..." required></textarea>
-          <button type="submit">Send Message</button>
+          <button type="submit" id="contactSubmitBtn">Send Message</button>
         </form>
       </div>
 
@@ -66,25 +66,60 @@
 <script src="../assets/js/auth-session.js"></script>
 <script src="../assets/js/main-animations.js"></script>
 <script>
-  function handleContact(e) {
+  async function handleContact(e) {
     e.preventDefault();
+    const btn = document.getElementById('contactSubmitBtn');
     const name = document.getElementById('contactName').value.trim();
     const email = document.getElementById('contactEmail').value.trim();
     const subject = document.getElementById('contactSubject').value.trim();
     const message = document.getElementById('contactMessage').value.trim();
+    const alertBox = document.getElementById('contactAlert');
 
-    if (window.SLMS_STORE) {
-      window.SLMS_STORE.addMessage({ name, email, subject, message });
+    if (!name || !email || !message) {
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#ffebee';
+      alertBox.style.color = '#c62828';
+      alertBox.style.borderColor = '#ef9a9a';
+      alertBox.innerText = 'Please fill in your Name, Email, and Message.';
+      return false;
     }
 
-    const alertBox = document.getElementById('contactAlert');
-    alertBox.style.display = 'block';
-    alertBox.style.background = '#e8f5e9';
-    alertBox.style.color = '#2e7d32';
-    alertBox.style.borderColor = '#a5d6a7';
-    alertBox.innerText = 'Thank you! Your inquiry has been submitted and forwarded to the Librarian.';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Sending Message...';
+    }
 
-    document.getElementById('contactForm').reset();
+    try {
+      if (window.SLMS_STORE) {
+        window.SLMS_STORE.addMessage({ name, email, subject, message });
+      }
+
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message })
+      }).catch(() => {});
+
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#e8f5e9';
+      alertBox.style.color = '#2e7d32';
+      alertBox.style.borderColor = '#a5d6a7';
+      alertBox.innerText = '✓ Thank you! Your inquiry has been sent to the Librarian and logged in the system.';
+
+      document.getElementById('contactForm').reset();
+    } catch (err) {
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#ffebee';
+      alertBox.style.color = '#c62828';
+      alertBox.style.borderColor = '#ef9a9a';
+      alertBox.innerText = 'Could not send message. Please try again.';
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Send Message';
+      }
+    }
+
     return false;
   }
 </script>

@@ -17,6 +17,8 @@ function initDatabase() {
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'student',
+      department TEXT DEFAULT 'Computer Science',
+      year TEXT DEFAULT '1st Year',
       created_at TEXT NOT NULL
     );
 
@@ -58,14 +60,36 @@ function initDatabase() {
     );
   `);
 
+  try {
+    const userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+    if (!userCols.includes('department')) {
+      db.exec("ALTER TABLE users ADD COLUMN department TEXT DEFAULT 'Computer Science'");
+    }
+    if (!userCols.includes('year')) {
+      db.exec("ALTER TABLE users ADD COLUMN year TEXT DEFAULT '1st Year'");
+    }
+  } catch (err) {}
+
+  try {
+    db.prepare("UPDATE users SET department = 'Library Administration', year = 'Staff' WHERE user_id = 'ADMIN01'").run();
+    db.prepare("UPDATE users SET department = 'Computer Science', year = '3rd Year' WHERE user_id = 'STU101'").run();
+    db.prepare("UPDATE users SET department = 'Information Technology', year = '2nd Year' WHERE user_id = 'STU102'").run();
+    db.prepare("UPDATE users SET department = 'Mechanical Engg.', year = '4th Year' WHERE user_id = 'STU103'").run();
+    db.prepare("UPDATE users SET department = 'Economics', year = '1st Year' WHERE user_id = 'STU104'").run();
+    db.prepare("UPDATE users SET department = 'Computer Science & Engg', year = 'Final Year' WHERE user_id = 'STU105'").run();
+    db.prepare("UPDATE users SET department = 'Computer Science' WHERE department IS NULL OR department = ''").run();
+    db.prepare("UPDATE users SET year = '1st Year' WHERE year IS NULL OR year = ''").run();
+  } catch (err) {}
+
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
   if (userCount === 0) {
-    const insertUser = db.prepare('INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-    insertUser.run('ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', '2026-01-01');
-    insertUser.run('STU101', 'John Doe', 'john@example.com', 'student123', 'student', '2026-02-15');
-    insertUser.run('STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', '2026-03-10');
-    insertUser.run('STU103', 'David Miller', 'david@example.com', 'student123', 'student', '2026-04-05');
-    insertUser.run('STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', '2026-05-01');
+    const insertUser = db.prepare('INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    insertUser.run('ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01');
+    insertUser.run('STU101', 'John Doe', 'john@example.com', 'student123', 'student', 'Computer Science', '3rd Year', '2026-02-15');
+    insertUser.run('STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', 'Information Technology', '2nd Year', '2026-03-10');
+    insertUser.run('STU103', 'David Miller', 'david@example.com', 'student123', 'student', 'Mechanical Engg.', '4th Year', '2026-04-05');
+    insertUser.run('STU104', 'Ananya Verma', 'ananya@example.com', 'student123', 'student', 'Economics', '1st Year', '2026-04-20');
+    insertUser.run('STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', 'Computer Science & Engg', 'Final Year', '2026-05-01');
   }
 
   const bookCount = db.prepare('SELECT COUNT(*) as count FROM books').get().count;
@@ -197,6 +221,8 @@ const server = http.createServer(async (req, res) => {
     const studentId = (body.studentId || body.student_id || body.user_id || '').trim().toUpperCase();
     const email = (body.email || '').trim().toLowerCase();
     const password = (body.password || 'student123').trim();
+    const department = (body.department || 'Computer Science').trim();
+    const year = (body.year || '1st Year').trim();
 
     if (!name || !studentId || !email) {
       return sendJson(res, false, 'Name, Student ID, and Email are required.', null, 400);
@@ -211,14 +237,16 @@ const server = http.createServer(async (req, res) => {
     }
 
     const now = new Date().toISOString().split('T')[0];
-    const insert = db.prepare('INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-    insert.run(studentId, name, email, password, 'student', now);
+    const insert = db.prepare('INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    insert.run(studentId, name, email, password, 'student', department, year, now);
 
     return sendJson(res, true, 'Student registered successfully!', {
       studentId,
       user_id: studentId,
       name,
       email,
+      department,
+      year,
       role: 'student'
     });
   }
@@ -430,24 +458,55 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname === '/api/users/students') {
-    const students = db.prepare("SELECT id, user_id as studentId, name, email, role, created_at FROM users WHERE role = 'student' ORDER BY id DESC").all();
+    const students = db.prepare("SELECT id, user_id as studentId, name, email, department, year, role, created_at FROM users WHERE role = 'student' ORDER BY id DESC").all();
     return sendJson(res, true, 'Students loaded', students);
   }
 
-  if (pathname === '/api/messages') {
-    if (method === 'POST') {
+  if (pathname === '/api/messages' || pathname === '/backend/contact.php') {
+    const action = urlObj.searchParams.get('action') || '';
+    if (method === 'POST' && (action === 'submit' || !action)) {
       const body = await parseBody(req);
       const name = (body.name || '').trim();
       const email = (body.email || '').trim();
-      const subject = (body.subject || '').trim();
+      const subject = (body.subject || 'General Inquiry').trim();
       const message = (body.message || '').trim();
       const date = new Date().toLocaleDateString('en-GB');
 
-      db.prepare('INSERT INTO messages (name, email, subject, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      if (!name || !email || !message) {
+        return sendJson(res, false, 'Please fill in Name, Email and Message.', null, 400);
+      }
+
+      const info = db.prepare('INSERT INTO messages (name, email, subject, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?)')
         .run(name, email, subject, message, 'Unread', date);
-      return sendJson(res, true, 'Message received successfully.');
+
+      return sendJson(res, true, 'Your message has been sent successfully.', {
+        id: Number(info.lastInsertRowid),
+        name,
+        email,
+        subject,
+        message,
+        status: 'Unread',
+        date,
+        created_at: date
+      });
+    } else if (method === 'DELETE' || (method === 'POST' && action === 'delete')) {
+      const body = await parseBody(req);
+      const id = body.id || urlObj.searchParams.get('id');
+      if (id) {
+        db.prepare('DELETE FROM messages WHERE id = ?').run(id);
+        return sendJson(res, true, 'Message deleted successfully.');
+      }
+      return sendJson(res, false, 'Message ID required.', null, 400);
+    } else if (method === 'PUT' || (method === 'POST' && action === 'reply')) {
+      const body = await parseBody(req);
+      const id = body.id || urlObj.searchParams.get('id');
+      if (id) {
+        db.prepare("UPDATE messages SET status = 'Replied' WHERE id = ?").run(id);
+        return sendJson(res, true, 'Message marked as Replied.');
+      }
+      return sendJson(res, false, 'Message ID required.', null, 400);
     } else {
-      const msgs = db.prepare('SELECT * FROM messages ORDER BY id DESC').all();
+      const msgs = db.prepare('SELECT id, name, email, subject, message, status, created_at, created_at as date FROM messages ORDER BY id DESC').all();
       return sendJson(res, true, 'Messages loaded', msgs);
     }
   }

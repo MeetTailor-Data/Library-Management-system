@@ -97,9 +97,12 @@ function handle_signup() {
         }
     }
 
-    $insertStmt = $db->prepare("INSERT INTO users (user_id, name, email, password, role, created_at) VALUES (?, ?, ?, ?, 'student', ?)");
+    $department = trim($_POST['department'] ?? 'Computer Science');
+    $year = trim($_POST['year'] ?? '1st Year');
+
+    $insertStmt = $db->prepare("INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, 'student', ?, ?, ?)");
     $createdDate = date('Y-m-d');
-    $insertStmt->execute([$studentId, $name, $email, $password, $createdDate]);
+    $insertStmt->execute([$studentId, $name, $email, $password, $department, $year, $createdDate]);
     $newId = (int)$db->lastInsertId();
 
     $newUser = [
@@ -107,6 +110,8 @@ function handle_signup() {
         'user_id' => $studentId,
         'name' => $name,
         'email' => $email,
+        'department' => $department,
+        'year' => $year,
         'role' => 'student'
     ];
 

@@ -420,11 +420,13 @@
           : '<span class="status-badge status-returned">Active</span>';
 
         const tr = document.createElement('tr');
+        const deptText = s.department && s.department !== 'undefined' ? s.department : 'Computer Science';
+        const yearText = s.year && s.year !== 'undefined' ? s.year : '1st Year';
         tr.innerHTML = `
           <td><strong>${s.studentId}</strong></td>
           <td>${s.name}</td>
           <td>${s.email}</td>
-          <td>${s.department} (${s.year || 'General'})</td>
+          <td>${deptText} (${yearText})</td>
           <td><strong>${activeBorrows.length} / 3</strong></td>
           <td>${statusBadge}</td>
         `;
@@ -450,10 +452,10 @@
           : '<span class="status-badge status-returned">Replied</span>';
 
         tr.innerHTML = `
-          <td>${m.date}</td>
+          <td>${m.date || m.created_at || 'Today'}</td>
           <td><strong>${m.name}</strong></td>
           <td>${m.email}</td>
-          <td>${m.subject}</td>
+          <td>${m.subject || 'General Inquiry'}</td>
           <td>${m.message}</td>
           <td>${statusBadge}</td>
           <td>
@@ -475,7 +477,8 @@
       students.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.studentId;
-        opt.text = `${s.studentId} - ${s.name} (${s.department})`;
+        const deptText = s.department && s.department !== 'undefined' ? s.department : 'General';
+        opt.text = `${s.studentId} - ${s.name} (${deptText})`;
         stuSelect.appendChild(opt);
       });
 
@@ -624,13 +627,16 @@
     }
 
     function replyAdminMessage(id, email) {
-      prompt(`Enter your email reply to ${email}:`, 'Thank you for reaching out to the library.');
-      window.SLMS_STORE.replyMessage(id);
-      refreshAdminDashboard();
+      const reply = prompt(`Enter your email reply to ${email}:`, 'Thank you for reaching out to the library.');
+      if (reply) {
+        window.SLMS_STORE.replyMessage(id);
+        alert(`Reply recorded and message marked as Replied!`);
+        refreshAdminDashboard();
+      }
     }
 
     function deleteAdminMessage(id) {
-      if (confirm('Delete this message?')) {
+      if (confirm('Delete this message permanently?')) {
         window.SLMS_STORE.deleteMessage(id);
         refreshAdminDashboard();
       }
