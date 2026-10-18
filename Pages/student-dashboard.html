@@ -35,7 +35,7 @@
   <div class="dashboard-header">
     <div>
       <h1>Student Portal</h1>
-      <p style="color: #666;">Assigned Student ID: <strong id="displayStudentId">STU101</strong></p>
+      <p style="color: #666;">Assigned Student ID: <strong id="displayStudentId">STU101</strong> &nbsp;|&nbsp; Department: <strong id="displayStudentDept">Computer Science (3rd Year)</strong></p>
     </div>
     <div>
       <a href="catalog.html" class="btn-secondary" style="font-size: 14px;">+ Search & Borrow Books</a>
@@ -180,6 +180,20 @@
     const displayStudentId = document.getElementById('displayStudentId');
     if (displayStudentId) {
       displayStudentId.innerText = currentStudentId;
+    }
+
+    let stuDept = user.department || '';
+    let stuYear = user.year || '';
+    if (window.SLMS_STORE) {
+      const rec = window.SLMS_STORE.getStudentById(currentStudentId);
+      if (rec) {
+        if (!stuDept || stuDept === 'General') stuDept = rec.department;
+        if (!stuYear) stuYear = rec.year;
+      }
+    }
+    const displayStudentDept = document.getElementById('displayStudentDept');
+    if (displayStudentDept) {
+      displayStudentDept.innerText = `${stuDept || 'Computer Science'} (${stuYear || '1st Year'})`;
     }
 
     loadStudentBorrows(currentStudentId);
