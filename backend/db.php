@@ -121,16 +121,26 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         created_at DATE NOT NULL
     )");
 
-    $count = (int)$pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-    if ($count === 0) {
-        $stmt = $pdo->prepare("INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute(['ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01']);
-        $stmt->execute(['STU101', 'John Doe', 'john@example.com', 'student123', 'student', 'Computer Science', '3rd Year', '2026-02-15']);
-        $stmt->execute(['STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', 'Information Technology', '2nd Year', '2026-03-10']);
-        $stmt->execute(['STU103', 'David Miller', 'david@example.com', 'student123', 'student', 'Mechanical Engg.', '4th Year', '2026-04-05']);
-        $stmt->execute(['STU104', 'Ananya Verma', 'ananya@example.com', 'student123', 'student', 'Economics', '1st Year', '2026-04-20']);
-        $stmt->execute(['STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', 'Computer Science & Engg', 'Final Year', '2026-05-01']);
+    $coreUsers = [
+        ['ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01'],
+        ['STU101', 'John Doe', 'john@example.com', 'student123', 'student', 'Computer Science', '3rd Year', '2026-02-15'],
+        ['STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', 'Information Technology', '2nd Year', '2026-03-10'],
+        ['STU103', 'David Miller', 'david@example.com', 'student123', 'student', 'Mechanical Engg.', '4th Year', '2026-04-05'],
+        ['STU104', 'Ananya Verma', 'ananya@example.com', 'student123', 'student', 'Economics', '1st Year', '2026-04-20'],
+        ['STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', 'Computer Science & Engg', 'Final Year', '2026-05-01']
+    ];
+    $checkUser = $pdo->prepare("SELECT COUNT(*) FROM users WHERE UPPER(user_id) = ?");
+    $insertUser = $pdo->prepare("INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    foreach ($coreUsers as $u) {
+        $checkUser->execute([strtoupper($u[0])]);
+        if ((int)$checkUser->fetchColumn() === 0) {
+            try { $insertUser->execute($u); } catch (Exception $e) {}
+        }
     }
+    try {
+        $pdo->exec("DELETE FROM users WHERE UPPER(user_id) IN ('STU106', 'STU107')");
+        $pdo->exec("DELETE FROM issued_books WHERE UPPER(user_id) IN ('STU106', 'STU107')");
+    } catch (Exception $e) {}
 
     $bookCount = (int)$pdo->query("SELECT COUNT(*) FROM books")->fetchColumn();
     if ($bookCount === 0) {

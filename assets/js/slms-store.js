@@ -340,6 +340,11 @@
         }
       });
     }
+    // Explicitly purge test users STU106 & STU107 if previously cached in this browser profile
+    users = users.filter(u => {
+      const sid = (u.studentId || '').toUpperCase();
+      return sid !== 'STU106' && sid !== 'STU107';
+    });
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
 
     let circs = getRaw(STORAGE_KEYS.CIRCULATIONS, []);
@@ -403,6 +408,16 @@
         const uData = await uRes.json();
         if (uData.status && Array.isArray(uData.data)) {
           let currentUsers = getRaw(STORAGE_KEYS.USERS, DEFAULT_USERS);
+          const dbStudentIds = new Set(uData.data.map(dbStu => (dbStu.studentId || '').toUpperCase()));
+
+          // 1. Authoritative sync: Prune students not in the database response (keeps admin)
+          currentUsers = currentUsers.filter(u => {
+            const sid = (u.studentId || '').toUpperCase();
+            if (u.role === 'admin' || sid === 'ADMIN01') return true;
+            return dbStudentIds.has(sid);
+          });
+
+          // 2. Insert or update students returned by the database
           uData.data.forEach(dbStu => {
             const idx = currentUsers.findIndex(u => (u.studentId && u.studentId.toUpperCase() === dbStu.studentId.toUpperCase()));
             const dept = dbStu.department || (idx !== -1 && currentUsers[idx].department ? currentUsers[idx].department : 'Computer Science');
@@ -578,6 +593,25 @@
       }).then(() => syncWithBackend()).catch(() => {});
 
       return { success: true, student: newStu };
+    },
+
+    deleteStudent(studentId) {
+      if (!studentId) return;
+      const upper = studentId.trim().toUpperCase();
+      let users = this.getUsers();
+      users = users.filter(u => (u.studentId && u.studentId.toUpperCase() !== upper));
+      setRaw(STORAGE_KEYS.USERS, users);
+      notifyChange();
+
+      fetch('/api/users/students?action=delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: upper })
+      }).then(() => syncWithBackend()).catch(() => {});
+    },
+
+    syncNow() {
+      return syncWithBackend();
     },
 
     getCirculations() {

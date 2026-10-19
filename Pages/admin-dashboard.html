@@ -150,9 +150,10 @@
       <div class="dashboard-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
           <h2 style="margin: 0; border: none; padding: 0;">Registered Students</h2>
-          <div style="display: flex; gap: 10px;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <input type="text" class="search-table-input" id="studentSearch" placeholder="Search student..." onkeyup="filterStudentTable()">
             <button type="button" class="btn-primary" style="border:none; cursor:pointer; font-size: 13px; padding: 8px 14px;" onclick="openAddStudentModal()">+ Add Student</button>
+            <button type="button" class="filter-btn" style="cursor:pointer; font-size: 13px; padding: 8px 14px;" onclick="syncStudentsFromCloud(true)" title="Force sync with cloud database">⟳ Sync Database</button>
           </div>
         </div>
 
@@ -165,6 +166,7 @@
               <th>Department / Year</th>
               <th>Active Borrows</th>
               <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="adminStudentsBody">
@@ -429,6 +431,9 @@
           <td>${deptText} (${yearText})</td>
           <td><strong>${activeBorrows.length} / 3</strong></td>
           <td>${statusBadge}</td>
+          <td>
+            <button class="btn-sm btn-danger" onclick="deleteStudentAccount('${s.studentId}')">Delete</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -596,6 +601,25 @@
       document.getElementById('addStudentForm').reset();
       closeAddStudentModal();
       refreshAdminDashboard();
+    }
+
+    function deleteStudentAccount(studentId) {
+      if (!confirm(`Are you sure you want to remove student "${studentId}"? This will delete them from the database across all browsers.`)) return;
+      if (window.SLMS_STORE) {
+        window.SLMS_STORE.deleteStudent(studentId);
+        alert(`Student ${studentId} removed.`);
+        refreshAdminDashboard();
+      }
+    }
+
+    async function syncStudentsFromCloud(showNotice = false) {
+      if (window.SLMS_STORE && window.SLMS_STORE.syncNow) {
+        await window.SLMS_STORE.syncNow();
+        refreshAdminDashboard();
+        if (showNotice) {
+          alert('Database synced! All student accounts are now 100% matched with the database.');
+        }
+      }
     }
 
     function adminReturnBook(circId, title) {

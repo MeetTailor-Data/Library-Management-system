@@ -81,16 +81,27 @@ function initDatabase() {
     db.prepare("UPDATE users SET year = '1st Year' WHERE year IS NULL OR year = ''").run();
   } catch (err) {}
 
-  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
-  if (userCount === 0) {
-    const insertUser = db.prepare('INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    insertUser.run('ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01');
-    insertUser.run('STU101', 'John Doe', 'john@example.com', 'student123', 'student', 'Computer Science', '3rd Year', '2026-02-15');
-    insertUser.run('STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', 'Information Technology', '2nd Year', '2026-03-10');
-    insertUser.run('STU103', 'David Miller', 'david@example.com', 'student123', 'student', 'Mechanical Engg.', '4th Year', '2026-04-05');
-    insertUser.run('STU104', 'Ananya Verma', 'ananya@example.com', 'student123', 'student', 'Economics', '1st Year', '2026-04-20');
-    insertUser.run('STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', 'Computer Science & Engg', 'Final Year', '2026-05-01');
+  const coreSeedUsers = [
+    ['ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01'],
+    ['STU101', 'John Doe', 'john@example.com', 'student123', 'student', 'Computer Science', '3rd Year', '2026-02-15'],
+    ['STU102', 'Emily Clark', 'emily@example.com', 'student123', 'student', 'Information Technology', '2nd Year', '2026-03-10'],
+    ['STU103', 'David Miller', 'david@example.com', 'student123', 'student', 'Mechanical Engg.', '4th Year', '2026-04-05'],
+    ['STU104', 'Ananya Verma', 'ananya@example.com', 'student123', 'student', 'Economics', '1st Year', '2026-04-20'],
+    ['STU105', 'Meet Tailor', 'meet@example.com', 'meet2006', 'student', 'Computer Science & Engg', 'Final Year', '2026-05-01']
+  ];
+  for (const u of coreSeedUsers) {
+    const exists = db.prepare('SELECT COUNT(*) as count FROM users WHERE UPPER(user_id) = ?').get(u[0].toUpperCase()).count;
+    if (exists === 0) {
+      try {
+        db.prepare('INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(...u);
+      } catch (e) {}
+    }
   }
+
+  try {
+    db.prepare("DELETE FROM users WHERE UPPER(user_id) IN ('STU106', 'STU107')").run();
+    db.prepare("DELETE FROM issued_books WHERE UPPER(user_id) IN ('STU106', 'STU107')").run();
+  } catch (e) {}
 
   const bookCount = db.prepare('SELECT COUNT(*) as count FROM books').get().count;
   if (bookCount === 0) {
@@ -458,6 +469,19 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname === '/api/users/students') {
+    if (method === 'DELETE' || method === 'POST') {
+      const body = await parseBody(req);
+      const action = urlObj.searchParams.get('action') || body.action || '';
+      if (method === 'DELETE' || action === 'delete') {
+        const studentId = (body.studentId || urlObj.searchParams.get('studentId') || body.id || '').toString().trim();
+        if (studentId) {
+          db.prepare('DELETE FROM users WHERE UPPER(user_id) = UPPER(?) OR id = ?').run(studentId, studentId);
+          db.prepare('DELETE FROM issued_books WHERE UPPER(user_id) = UPPER(?)').run(studentId);
+          return sendJson(res, true, `Student ${studentId} removed successfully.`);
+        }
+        return sendJson(res, false, 'Student ID required.', null, 400);
+      }
+    }
     const students = db.prepare("SELECT id, user_id as studentId, name, email, department, year, role, created_at FROM users WHERE role = 'student' ORDER BY id DESC").all();
     return sendJson(res, true, 'Students loaded', students);
   }
