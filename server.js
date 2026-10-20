@@ -312,6 +312,48 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, true, `Book '${title}' added to inventory.`, { isbn, title, author });
   }
 
+  if (
+    (pathname === '/api/books' && (method === 'PUT' || method === 'PATCH')) ||
+    (pathname === '/backend/books.php' && urlObj.searchParams.get('action') === 'edit') ||
+    (pathname === '/api/books/quantity' && (method === 'POST' || method === 'PUT'))
+  ) {
+    const body = await parseBody(req);
+    const isbn = (body.isbn || urlObj.searchParams.get('isbn') || '').trim();
+    if (!isbn) return sendJson(res, false, 'ISBN is required.', null, 400);
+
+    const book = db.prepare('SELECT * FROM books WHERE isbn = ?').get(isbn);
+    if (!book) return sendJson(res, false, 'Book not found in inventory.', null, 404);
+
+    let newTotal = book.total_copies;
+    let newAvailable = book.available_copies;
+
+    if (body.totalCopies !== undefined || body.total_copies !== undefined) {
+      const reqTotal = parseInt(body.totalCopies !== undefined ? body.totalCopies : body.total_copies, 10);
+      if (!isNaN(reqTotal) && reqTotal >= 0) {
+        const issued = Math.max(0, book.total_copies - book.available_copies);
+        newTotal = reqTotal;
+        newAvailable = Math.max(0, newTotal - issued);
+      }
+    }
+    if (body.availableCopies !== undefined || body.available_copies !== undefined) {
+      const reqAvail = parseInt(body.availableCopies !== undefined ? body.availableCopies : body.available_copies, 10);
+      if (!isNaN(reqAvail) && reqAvail >= 0) {
+        newAvailable = Math.min(newTotal, reqAvail);
+      }
+    }
+
+    db.prepare('UPDATE books SET total_copies = ?, available_copies = ? WHERE id = ?')
+      .run(newTotal, newAvailable, book.id);
+
+    return sendJson(res, true, `Book '${book.title}' quantity updated successfully.`, {
+      id: book.id,
+      title: book.title,
+      isbn: book.isbn,
+      total_copies: newTotal,
+      available_copies: newAvailable
+    });
+  }
+
   if (pathname === '/api/books' && method === 'DELETE' || pathname === '/backend/books.php' && urlObj.searchParams.get('action') === 'delete') {
     const body = await parseBody(req);
     const isbn = body.isbn || urlObj.searchParams.get('isbn');

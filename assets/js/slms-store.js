@@ -526,12 +526,80 @@
       return newBook;
     },
 
+    updateBookQuantity(isbn, newTotalCopies) {
+      const books = this.getBooks();
+      const idx = books.findIndex(b => b.isbn === isbn);
+      if (idx === -1) {
+        return { success: false, message: 'Book not found in inventory.' };
+      }
+
+      const book = books[idx];
+      const curTotal = parseInt(book.totalCopies, 10) || 0;
+      const curAvail = parseInt(book.availableCopies, 10) || 0;
+      const currentlyIssued = Math.max(0, curTotal - curAvail);
+
+      const targetTotal = parseInt(newTotalCopies, 10);
+      if (isNaN(targetTotal) || targetTotal < 0) {
+        return { success: false, message: 'Quantity must be a valid non-negative number.' };
+      }
+
+      if (targetTotal < currentlyIssued) {
+        return {
+          success: false,
+          message: `Cannot reduce total copies below ${currentlyIssued} because ${currentlyIssued} copy/copies are currently borrowed by students.`
+        };
+      }
+
+      const newAvailable = Math.max(0, targetTotal - currentlyIssued);
+      books[idx].totalCopies = targetTotal;
+      books[idx].availableCopies = newAvailable;
+      setRaw(STORAGE_KEYS.BOOKS, books);
+      notifyChange();
+
+      // Persist to backend server / database
+      fetch('/api/books', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isbn: book.isbn,
+          totalCopies: targetTotal,
+          availableCopies: newAvailable
+        })
+      }).then(() => syncWithBackend()).catch(() => {
+        // Fallback for PHP server environments
+        fetch('/backend/books.php?action=edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `id=${book.id || 0}&isbn=${encodeURIComponent(book.isbn)}&total_copies=${targetTotal}`
+        }).catch(() => {});
+      });
+
+      return {
+        success: true,
+        book: books[idx],
+        message: `Quantity for "${book.title}" updated successfully! Total: ${targetTotal}, Available: ${newAvailable}.`
+      };
+    },
+
     updateBook(isbn, updatedFields) {
       const books = this.getBooks();
       const idx = books.findIndex(b => b.isbn === isbn);
       if (idx !== -1) {
+        if (updatedFields && (updatedFields.totalCopies !== undefined || updatedFields.total_copies !== undefined)) {
+          const qty = updatedFields.totalCopies !== undefined ? updatedFields.totalCopies : updatedFields.total_copies;
+          const res = this.updateBookQuantity(isbn, qty);
+          return res.book || books[idx];
+        }
         books[idx] = { ...books[idx], ...updatedFields };
         setRaw(STORAGE_KEYS.BOOKS, books);
+        notifyChange();
+
+        fetch('/api/books', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isbn, ...updatedFields })
+        }).then(() => syncWithBackend()).catch(() => {});
+
         return books[idx];
       }
       return null;

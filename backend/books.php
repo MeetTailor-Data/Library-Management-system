@@ -131,8 +131,15 @@ function edit_book() {
     $totalCopies = isset($_POST['total_copies']) ? (int)$_POST['total_copies'] : null;
 
     $db = get_db();
-    $stmt = $db->prepare("SELECT * FROM books WHERE id = ? LIMIT 1");
-    $stmt->execute([$id]);
+    if ($id > 0) {
+        $stmt = $db->prepare("SELECT * FROM books WHERE id = ? LIMIT 1");
+        $stmt->execute([$id]);
+    } else if (!empty($isbn)) {
+        $stmt = $db->prepare("SELECT * FROM books WHERE isbn = ? LIMIT 1");
+        $stmt->execute([$isbn]);
+    } else {
+        json_response(false, 'Book ID or ISBN is required for update.', null, 400);
+    }
     $book = $stmt->fetch();
 
     if (!$book) {
@@ -154,7 +161,7 @@ function edit_book() {
     }
 
     $updateStmt = $db->prepare("UPDATE books SET title = ?, author = ?, category = ?, isbn = ?, total_copies = ?, available_copies = ? WHERE id = ?");
-    $updateStmt->execute([$newTitle, $newAuthor, $newCategory, $newIsbn, $newTotal, $newAvailable, $id]);
+    $updateStmt->execute([$newTitle, $newAuthor, $newCategory, $newIsbn, $newTotal, $newAvailable, (int)$book['id']]);
 
     json_response(true, 'Book updated successfully.');
 }

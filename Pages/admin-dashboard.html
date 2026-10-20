@@ -287,6 +287,65 @@
     </div>
   </div>
 
+  <!-- Manage Book Quantity Modal -->
+  <div class="modal-overlay" id="editQuantityModal" onclick="if(event.target === this) closeEditQuantityModal()">
+    <div class="modal-card" style="max-width: 480px;">
+      <button class="modal-close" onclick="closeEditQuantityModal()">&times;</button>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="width: 42px; height: 42px; border-radius: 8px; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+          📦
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 18px; color: #1e293b;">Manage Book Quantity</h3>
+          <p id="editQtyBookTitle" style="margin: 3px 0 0; color: #64748b; font-size: 13px; font-weight: 500;"></p>
+        </div>
+      </div>
+
+      <form id="editQuantityForm" onsubmit="handleUpdateQuantity(event)">
+        <input type="hidden" id="editQtyIsbn">
+
+        <!-- Stock Summary Cards -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Current Total</div>
+            <div id="editQtyCurrentTotal" style="font-size: 20px; font-weight: 700; color: #1e293b; margin-top: 4px;">0</div>
+          </div>
+          <div style="background: #fff7ed; border: 1px solid #ffedd5; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 11px; color: #c2410c; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Issued / Borrowed</div>
+            <div id="editQtyCurrentIssued" style="font-size: 20px; font-weight: 700; color: #ea580c; margin-top: 4px;">0</div>
+          </div>
+          <div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 11px; color: #15803d; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Available Stock</div>
+            <div id="editQtyCurrentAvailable" style="font-size: 20px; font-weight: 700; color: #16a34a; margin-top: 4px;">0</div>
+          </div>
+        </div>
+
+        <!-- Quantity Adjuster -->
+        <div style="margin-bottom: 18px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #334155;">
+            Update Total Quantity (Physical Copies)
+          </label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="filter-btn" style="width: 44px; height: 44px; font-size: 20px; font-weight: bold; border-radius: 8px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="adjustQtyInput(-1)">−</button>
+            <input type="number" id="editQtyNewTotal" required min="0" style="flex: 1; height: 44px; text-align: center; font-size: 20px; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a;" oninput="updateQtyPreview()">
+            <button type="button" class="filter-btn" style="width: 44px; height: 44px; font-size: 20px; font-weight: bold; border-radius: 8px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="adjustQtyInput(1)">+</button>
+          </div>
+          <div id="editQtyHelpText" style="font-size: 12px; color: #64748b; margin-top: 8px;"></div>
+        </div>
+
+        <div style="background: #f1f5f9; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+          <span style="color: #475569;">Available stock after update:</span>
+          <strong id="editQtyPreviewAvailable" style="font-size: 15px; color: #16a34a;">0 copies available</strong>
+        </div>
+
+        <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="filter-btn" onclick="closeEditQuantityModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="border:none; cursor:pointer; padding: 10px 20px;">Save Quantity</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <footer class="main-footer">
     <div class="container footer-grid">
       <div>
@@ -374,7 +433,7 @@
           <td>${b.totalCopies}</td>
           <td><strong style="color: ${b.availableCopies > 0 ? '#28a745' : '#dc3545'};">${b.availableCopies}</strong></td>
           <td>
-            <button class="btn-sm btn-dark" onclick="editBook('${b.isbn}')">Edit</button>
+            <button class="btn-sm btn-dark" onclick="openEditQuantityModal('${b.isbn}')" title="Manage Quantity">Edit Qty</button>
             <button class="btn-sm btn-danger" onclick="deleteBook('${b.isbn}')">Delete</button>
           </td>
         `;
@@ -640,14 +699,103 @@
       }
     }
 
-    function editBook(isbn) {
+    let currentEditQtyBook = null;
+
+    function openEditQuantityModal(isbn) {
+      if (!window.SLMS_STORE) return;
       const book = window.SLMS_STORE.getBookByIsbn(isbn);
-      if (!book) return;
-      const newTitle = prompt('Edit Book Title:', book.title);
-      if (newTitle && newTitle.trim()) {
-        window.SLMS_STORE.updateBook(isbn, { title: newTitle.trim() });
-        refreshAdminDashboard();
+      if (!book) {
+        alert('Book not found in inventory.');
+        return;
       }
+
+      currentEditQtyBook = book;
+      const total = parseInt(book.totalCopies, 10) || 0;
+      const avail = parseInt(book.availableCopies, 10) || 0;
+      const issued = Math.max(0, total - avail);
+
+      document.getElementById('editQtyIsbn').value = book.isbn;
+      document.getElementById('editQtyBookTitle').textContent = `"${book.title}" by ${book.author} (ISBN: ${book.isbn})`;
+      document.getElementById('editQtyCurrentTotal').textContent = total;
+      document.getElementById('editQtyCurrentIssued').textContent = issued;
+      document.getElementById('editQtyCurrentAvailable').textContent = avail;
+
+      const input = document.getElementById('editQtyNewTotal');
+      input.value = total;
+      input.min = issued;
+
+      const helpText = document.getElementById('editQtyHelpText');
+      if (issued > 0) {
+        helpText.textContent = `Minimum allowed copies: ${issued} (${issued} copy/copies currently borrowed by students).`;
+        helpText.style.color = '#c2410c';
+      } else {
+        helpText.textContent = `All copies in library (0 borrowed). You can set any non-negative quantity.`;
+        helpText.style.color = '#64748b';
+      }
+
+      updateQtyPreview();
+      document.getElementById('editQuantityModal').classList.add('active');
+      setTimeout(() => input.focus(), 60);
+    }
+
+    function closeEditQuantityModal() {
+      document.getElementById('editQuantityModal').classList.remove('active');
+      currentEditQtyBook = null;
+    }
+
+    function adjustQtyInput(delta) {
+      const input = document.getElementById('editQtyNewTotal');
+      const minVal = parseInt(input.min, 10) || 0;
+      let val = (parseInt(input.value, 10) || minVal) + delta;
+      if (val < minVal) {
+        val = minVal;
+      }
+      input.value = val;
+      updateQtyPreview();
+    }
+
+    function updateQtyPreview() {
+      if (!currentEditQtyBook) return;
+      const input = document.getElementById('editQtyNewTotal');
+      const total = parseInt(currentEditQtyBook.totalCopies, 10) || 0;
+      const avail = parseInt(currentEditQtyBook.availableCopies, 10) || 0;
+      const issued = Math.max(0, total - avail);
+
+      const val = parseInt(input.value, 10);
+      const previewEl = document.getElementById('editQtyPreviewAvailable');
+      if (isNaN(val) || val < issued) {
+        previewEl.textContent = `Invalid (< ${issued} issued)`;
+        previewEl.style.color = '#dc2626';
+      } else {
+        const newAvail = val - issued;
+        previewEl.textContent = `${newAvail} copies available`;
+        previewEl.style.color = '#16a34a';
+      }
+    }
+
+    function handleUpdateQuantity(e) {
+      e.preventDefault();
+      const isbn = document.getElementById('editQtyIsbn').value;
+      const newTotal = parseInt(document.getElementById('editQtyNewTotal').value, 10);
+
+      if (isNaN(newTotal) || newTotal < 0) {
+        alert('Please enter a valid non-negative number for total copies.');
+        return;
+      }
+
+      const res = window.SLMS_STORE.updateBookQuantity(isbn, newTotal);
+      if (!res.success) {
+        alert(res.message);
+        return;
+      }
+
+      alert(res.message);
+      closeEditQuantityModal();
+      refreshAdminDashboard();
+    }
+
+    function editBook(isbn) {
+      openEditQuantityModal(isbn);
     }
 
     function replyAdminMessage(id, email) {
