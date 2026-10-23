@@ -812,6 +812,34 @@
       }
 
       refreshAdminDashboard();
+
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        if (tab) {
+          const tabMap = {
+            'overview': 0,
+            'inventory': 1,
+            'circulation': 2,
+            'students': 3,
+            'messages': 4
+          };
+          const idx = tabMap[tab];
+          if (idx !== undefined) {
+            const btns = document.querySelectorAll('.admin-tab-btn');
+            if (btns[idx]) switchTab(tab, btns[idx]);
+          }
+        }
+
+        const modal = urlParams.get('modal');
+        if (modal === 'addBook') {
+          setTimeout(openAddBookModal, 50);
+        } else if (modal === 'issueBook') {
+          setTimeout(openIssueModal, 50);
+        } else if (modal === 'addStudent') {
+          setTimeout(openAddStudentModal, 50);
+        }
+      } catch (e) {}
     });
   </script>
 </body>

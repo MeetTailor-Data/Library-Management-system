@@ -272,10 +272,26 @@
     }
   });
 
+  function checkStudentUrlParams() {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('scroll') === 'history') {
+        setTimeout(() => {
+          const sections = document.querySelectorAll('.dashboard-section');
+          if (sections[1]) sections[1].scrollIntoView({ behavior: 'instant' });
+        }, 100);
+      }
+    } catch (e) {}
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initStudentDashboard);
+    document.addEventListener('DOMContentLoaded', () => {
+      initStudentDashboard();
+      checkStudentUrlParams();
+    });
   } else {
     initStudentDashboard();
+    checkStudentUrlParams();
   }
 </script>
 </body>

@@ -246,6 +246,15 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     renderCatalogBooks();
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('modal') === 'book') {
+        setTimeout(() => {
+          const books = window.SLMS_STORE ? window.SLMS_STORE.getBooks() : [];
+          if (books.length > 0) openBookModalByIsbn(books[0].isbn);
+        }, 120);
+      }
+    } catch (e) {}
   });
 </script>
 </body>

@@ -193,14 +193,22 @@
   <script>
 
     window.addEventListener('DOMContentLoaded', () => {
-      const existingUser = getCurrentUser();
-      if (existingUser) {
-        if (existingUser.role === 'admin') {
-          window.location.href = 'admin-dashboard.html';
-        } else {
-          window.location.href = 'student-dashboard.html';
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tab') === 'signup' || urlParams.get('tab') === 'register' || urlParams.get('view') === 'register') {
+          showSignup();
         }
-      }
+        if (!urlParams.has('mode') && !urlParams.has('view')) {
+          const existingUser = getCurrentUser();
+          if (existingUser) {
+            if (existingUser.role === 'admin') {
+              window.location.href = 'admin-dashboard.html';
+            } else {
+              window.location.href = 'student-dashboard.html';
+            }
+          }
+        }
+      } catch (e) {}
     });
 
     function showLogin() {
