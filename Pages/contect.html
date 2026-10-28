@@ -92,13 +92,13 @@
     try {
       if (window.SLMS_STORE) {
         window.SLMS_STORE.addMessage({ name, email, subject, message });
+      } else {
+        await fetch('../backend/contact.php?action=submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, subject, message })
+        }).catch(() => {});
       }
-
-      await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, subject, message })
-      }).catch(() => {});
 
       alertBox.style.display = 'block';
       alertBox.style.background = '#e8f5e9';

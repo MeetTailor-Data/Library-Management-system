@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Management System - Full Technical Architecture & Workflow</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 14mm 14mm 14mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1f2937;
+      background: #ffffff;
+      line-height: 1.45;
+      font-size: 10pt;
+    }
+    .page-break {
+      page-break-after: always;
+      break-after: page;
+    }
+    .no-break {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px 20px;
+      text-align: center;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      page-break-after: always;
+      break-after: page;
+    }
+    .cover-badge {
+      display: inline-block;
+      background: #ffedd5;
+      color: #c2410c;
+      padding: 5px 16px;
+      font-size: 10.5pt;
+      font-weight: 700;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .cover-title {
+      font-size: 26pt;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+    .cover-subtitle {
+      font-size: 13pt;
+      color: #4b5563;
+      margin-bottom: 24px;
+      font-weight: 400;
+    }
+    .cover-meta {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 24px;
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .cover-meta table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .cover-meta td {
+      padding: 7px 6px;
+      font-size: 10pt;
+    }
+    .cover-meta td:first-child {
+      font-weight: 700;
+      color: #334155;
+      width: 42%;
+    }
+    .cover-footer {
+      font-size: 9.5pt;
+      color: #94a3b8;
+    }
+
+    /* Section Headers */
+    h1 {
+      font-size: 16pt;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 2.5px solid #ea580c;
+      padding-bottom: 4px;
+      margin-top: 14px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+    h2 {
+      font-size: 12.5pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+    p {
+      margin-bottom: 6px;
+      color: #374151;
+      text-align: justify;
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 14px 0;
+      font-size: 9pt;
+      page-break-inside: auto;
+    }
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    table.data-table th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    table.data-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    table.data-table tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Callouts */
+    .callout {
+      border-left: 4px solid #ea580c;
+      background: #fff7ed;
+      padding: 8px 12px;
+      margin: 8px 0 12px 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .callout.success {
+      border-left-color: #16a34a;
+      background: #f0fdf4;
+    }
+
+    /* Code Blocks */
+    pre, code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 8.5pt;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin: 6px 0 10px 0;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-break: break-all;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Architecture Flow */
+    .arch-flow {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin: 10px 0;
+      text-align: center;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .arch-box {
+      flex: 1;
+      padding: 8px 6px;
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+    }
+    .arch-box.active {
+      border-color: #ea580c;
+      background: #fff7ed;
+    }
+    .arch-box h4 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      margin-bottom: 2px;
+      color: #0f172a;
+    }
+    .arch-box p {
+      font-size: 7.5pt;
+      color: #64748b;
+      margin: 0;
+      text-align: center;
+    }
+
+    .workflow-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .workflow-card h3 {
+      font-size: 11pt;
+      color: #0f172a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .workflow-card ol {
+      margin-left: 20px;
+    }
+    .workflow-card li {
+      margin-bottom: 4px;
+      font-size: 9.5pt;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COVER PAGE -->
+  <div class="cover-page">
+    <div>
+      <span class="cover-badge">Academic Project Documentation</span>
+      <h1 class="cover-title">Smart Library Management System (SLMS)</h1>
+      <p class="cover-subtitle">Complete Technical Architecture, File Mapping & Workflow Specification</p>
+    </div>
+
+    <div class="cover-meta">
+      <table>
+        <tr>
+          <td>System Name:</td>
+          <td>Smart Library Management System</td>
+        </tr>
+        <tr>
+          <td>Primary Backend:</td>
+          <td>PHP 8.2 (PDO Architecture — 100% PHP)</td>
+        </tr>
+        <tr>
+          <td>Database Engine:</td>
+          <td>MySQL 8.x / MariaDB (XAMPP Server)</td>
+        </tr>
+        <tr>
+          <td>Frontend Stack:</td>
+          <td>HTML5, Vanilla CSS3, JavaScript (ES6+)</td>
+        </tr>
+        <tr>
+          <td>Web Server:</td>
+          <td>Apache HTTP Server (XAMPP Environment)</td>
+        </tr>
+        <tr>
+          <td>College Viva Scope:</td>
+          <td>100% Pure PHP & MySQL (Zero Node.js runtime)</td>
+        </tr>
+        <tr>
+          <td>Documentation Date:</td>
+          <td>October 2026</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="cover-footer">
+      Prepared for Faculty Academic Review, Project Demonstration, and Practical Examination Viva
+    </div>
+  </div>
+
+  <!-- SECTION 1: EXECUTIVE ARCHITECTURE OVERVIEW -->
+  <h1>1. Executive Architecture Overview</h1>
+  <p>
+    The <strong>Smart Library Management System (SLMS)</strong> is a relational library information system designed specifically to adhere to academic faculty and university viva standards. The entire backend runs natively on <strong>PHP 8.x</strong> and <strong>MySQL</strong> under XAMPP.
+  </p>
+
+  <div class="callout success">
+    <strong>Faculty Compliance Guarantee:</strong> The web application does NOT require Node.js, npm, or any external command-line server to function. All features—including student signup, authentication, book checkout/returns, inventory tracking, fine computation, and inquiry replies—are processed by native PHP scripts utilizing MySQL PDO prepared statements.
+  </div>
+
+  <h2>System Architecture Diagram</h2>
+  <div class="arch-flow">
+    <div class="arch-box">
+      <h4>Client Tier (Browser)</h4>
+      <p>HTML5 Pages + Vanilla CSS3 + Modern JavaScript (Fetch API)</p>
+    </div>
+    <div style="align-self: center; font-weight: bold; color: #ea580c;">&harr;</div>
+    <div class="arch-box">
+      <h4>Store Layer (JS)</h4>
+      <p><code>slms-store.js</code> (Client Cache & 3.5s Sync)</p>
+    </div>
+    <div style="align-self: center; font-weight: bold; color: #ea580c;">&harr;</div>
+    <div class="arch-box active">
+      <h4>PHP Backend Tier</h4>
+      <p>RESTful Controllers (<code>auth.php</code>, <code>books.php</code>, etc.)</p>
+    </div>
+    <div style="align-self: center; font-weight: bold; color: #ea580c;">&harr;</div>
+    <div class="arch-box">
+      <h4>MySQL Database Tier</h4>
+      <p><code>library_db</code> on Port 3306 (InnoDB Engine)</p>
+    </div>
+  </div>
+
+  <h2>Technology Stack Breakdown</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 22%;">Tier</th>
+        <th style="width: 26%;">Technology</th>
+        <th>Responsibility & Faculty Significance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Presentation (UI)</strong></td>
+        <td>HTML5, Vanilla CSS3</td>
+        <td>Semantic document layouts, custom responsive flexbox & grid design, mobile-friendly styles without framework bloat.</td>
+      </tr>
+      <tr>
+        <td><strong>Client Controller</strong></td>
+        <td>JavaScript (ES6+)</td>
+        <td>DOM manipulation, asynchronous AJAX <code>fetch()</code> requests, local cache synchronization, modal dialog control.</td>
+      </tr>
+      <tr>
+        <td><strong>Web Server</strong></td>
+        <td>Apache 2.4 (XAMPP)</td>
+        <td>Hosts virtual directory at <code>http://localhost/library/</code>, routes HTTP requests to PHP handlers.</td>
+      </tr>
+      <tr>
+        <td><strong>Backend Engine</strong></td>
+        <td>PHP 8.2 (PDO Extension)</td>
+        <td>Handles session auth, input sanitization, ACID transaction commits/rollbacks, fine calculations, JSON API serialization.</td>
+      </tr>
+      <tr>
+        <td><strong>Relational Database</strong></td>
+        <td>MySQL 8.x / MariaDB</td>
+        <td>Stores persistent tables (<code>users</code>, <code>books</code>, <code>issued_books</code>, <code>messages</code>), enforces foreign keys and uniqueness.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 2: DATABASE SCHEMA & RELATIONAL MODEL -->
+  <div class="page-break"></div>
+  <h1>2. Database Schema & Relational Model</h1>
+  <p>
+    The project uses a relational MySQL database named <code>library_db</code>. All tables are created with the <code>InnoDB</code> storage engine to provide full support for transactions, row-level locking, and foreign key integrity.
+  </p>
+
+  <h2>1. Users Table (<code>users</code>)</h2>
+  <p>Stores both System Librarians (Admin) and Registered Students with their Department and Academic Year.</p>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Column Name</th>
+        <th>Data Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>INT</td><td>PRIMARY KEY, AUTO_INCREMENT</td><td>Unique numerical record ID</td></tr>
+      <tr><td><code>user_id</code></td><td>VARCHAR(50)</td><td>NOT NULL, UNIQUE</td><td>Student ID (e.g. STU101) or Admin ID (ADMIN01)</td></tr>
+      <tr><td><code>name</code></td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Full name of the user</td></tr>
+      <tr><td><code>email</code></td><td>VARCHAR(150)</td><td>NOT NULL, UNIQUE</td><td>Official college email address</td></tr>
+      <tr><td><code>password</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Password (supports plaintext & bcrypt hash)</td></tr>
+      <tr><td><code>role</code></td><td>VARCHAR(20)</td><td>NOT NULL DEFAULT 'student'</td><td>Role indicator: <code>'admin'</code> or <code>'student'</code></td></tr>
+      <tr><td><code>department</code></td><td>VARCHAR(100)</td><td>NOT NULL DEFAULT 'Computer Science'</td><td>Academic department</td></tr>
+      <tr><td><code>year</code></td><td>VARCHAR(50)</td><td>NOT NULL DEFAULT '1st Year'</td><td>Academic year (1st, 2nd, 3rd, 4th, Final Year)</td></tr>
+      <tr><td><code>created_at</code></td><td>DATE</td><td>NOT NULL</td><td>Account registration timestamp date</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Books Catalog Table (<code>books</code>)</h2>
+  <p>Manages inventory, categories, ISBNs, and live available quantities.</p>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Column Name</th>
+        <th>Data Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>INT</td><td>PRIMARY KEY, AUTO_INCREMENT</td><td>Unique book identifier</td></tr>
+      <tr><td><code>title</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Full book title</td></tr>
+      <tr><td><code>author</code></td><td>VARCHAR(150)</td><td>NOT NULL</td><td>Author / Writer name</td></tr>
+      <tr><td><code>category</code></td><td>VARCHAR(100)</td><td>NOT NULL DEFAULT 'General'</td><td>Genre (Economics, Science, Technology, etc.)</td></tr>
+      <tr><td><code>isbn</code></td><td>VARCHAR(50)</td><td>NOT NULL, UNIQUE</td><td>International Standard Book Number</td></tr>
+      <tr><td><code>total_copies</code></td><td>INT</td><td>NOT NULL DEFAULT 1</td><td>Total physical copies owned by library</td></tr>
+      <tr><td><code>available_copies</code></td><td>INT</td><td>NOT NULL DEFAULT 1</td><td>Current shelf copies available for borrow</td></tr>
+      <tr><td><code>image</code></td><td>VARCHAR(255)</td><td>DEFAULT 'b1.jpg'</td><td>Cover artwork image path in assets</td></tr>
+      <tr><td><code>description</code></td><td>TEXT</td><td>NULL</td><td>Summary synopsis of the book</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Circulation Table (<code>issued_books</code>)</h2>
+  <p>Tracks borrowed books, 14-day due dates, actual return dates, and calculated overdue fines.</p>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Column Name</th>
+        <th>Data Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>INT</td><td>PRIMARY KEY, AUTO_INCREMENT</td><td>Unique circulation transaction ID</td></tr>
+      <tr><td><code>user_id</code></td><td>VARCHAR(50)</td><td>NOT NULL, INDEX</td><td>Student ID borrowing the book</td></tr>
+      <tr><td><code>student_name</code></td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Cached student name for rapid query presentation</td></tr>
+      <tr><td><code>book_id</code></td><td>INT</td><td>FOREIGN KEY -> books(id)</td><td>References target book</td></tr>
+      <tr><td><code>book_title</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Book title</td></tr>
+      <tr><td><code>isbn</code></td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Book ISBN</td></tr>
+      <tr><td><code>issue_date</code></td><td>DATE</td><td>NOT NULL</td><td>Date book was issued</td></tr>
+      <tr><td><code>due_date</code></td><td>DATE</td><td>NOT NULL</td><td>Calculated return deadline (Issue date + 14 days)</td></tr>
+      <tr><td><code>return_date</code></td><td>DATE</td><td>DEFAULT NULL</td><td>Date book was handed back (NULL if active)</td></tr>
+      <tr><td><code>status</code></td><td>ENUM</td><td>'Issued', 'Overdue', 'Returned'</td><td>Current borrow status</td></tr>
+      <tr><td><code>fine</code></td><td>DECIMAL(10,2)</td><td>NOT NULL DEFAULT 0.00</td><td>Calculated fine (₹5 per overdue day)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Contact & Inquiries Table (<code>messages</code>)</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Column Name</th>
+        <th>Data Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>INT</td><td>PRIMARY KEY, AUTO_INCREMENT</td><td>Message inquiry ID</td></tr>
+      <tr><td><code>name</code></td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Sender full name</td></tr>
+      <tr><td><code>email</code></td><td>VARCHAR(150)</td><td>NOT NULL</td><td>Sender email address</td></tr>
+      <tr><td><code>subject</code></td><td>VARCHAR(200)</td><td>NOT NULL</td><td>Subject matter of inquiry</td></tr>
+      <tr><td><code>message</code></td><td>TEXT</td><td>NOT NULL</td><td>Inquiry details/query</td></tr>
+      <tr><td><code>status</code></td><td>ENUM</td><td>'Unread', 'Replied'</td><td>Librarian action status</td></tr>
+      <tr><td><code>created_at</code></td><td>DATE</td><td>NOT NULL</td><td>Submission date</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 3: FILE-BY-FILE PURPOSE & MAPPING -->
+  <div class="page-break"></div>
+  <h1>3. File-by-File Purpose & Mapping Guide</h1>
+  <p>
+    Every file in the repository maintains a clear separation of concerns between presentation, client-side store synchronization, and backend PHP/MySQL persistence.
+  </p>
+
+  <h2>A. Backend Core PHP Scripts (<code>/backend/</code>)</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 25%;">File Path</th>
+        <th style="width: 22%;">Key Functions</th>
+        <th>Detailed Purpose & Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>backend/db.php</code></td>
+        <td>
+          <code>get_db()</code><br>
+          <code>get_request_data()</code><br>
+          <code>json_response()</code><br>
+          <code>calculate_overdue_fine()</code>
+        </td>
+        <td>
+          <strong>Central Database Hub:</strong> Establishes singleton PDO connection to MySQL (<code>127.0.0.1:3306</code>). Parses incoming request payloads from standard <code>$_POST</code> or raw JSON <code>php://input</code>. Calculates ₹5/day overdue fines.
+        </td>
+      </tr>
+      <tr>
+        <td><code>backend/config.php</code></td>
+        <td>Configuration array</td>
+        <td>Stores credentials: host <code>127.0.0.1</code>, port <code>3306</code>, database <code>library_db</code>, user <code>root</code>, password <code>""</code>.</td>
+      </tr>
+      <tr>
+        <td><code>backend/auth.php</code></td>
+        <td>
+          <code>handle_login()</code><br>
+          <code>handle_signup()</code><br>
+          <code>handle_list_students()</code><br>
+          <code>handle_delete_student()</code>
+        </td>
+        <td>
+          <strong>Authentication & Directory:</strong> Authenticates Admin (<code>ADMIN01</code>) and students against MySQL. Validates uniqueness of Student ID & Email during registration. Inserts new student records with department and academic year.
+        </td>
+      </tr>
+      <tr>
+        <td><code>backend/books.php</code></td>
+        <td>
+          <code>list_books()</code><br>
+          <code>add_book()</code><br>
+          <code>edit_book()</code><br>
+          <code>delete_book()</code>
+        </td>
+        <td>
+          <strong>Inventory Controller:</strong> Returns JSON array of all books with search/genre filters. Inserts new catalog items, adjusts stock totals, and prevents deletion of books with active borrowings.
+        </td>
+      </tr>
+      <tr>
+        <td><code>backend/circulation.php</code></td>
+        <td>
+          <code>issue_book()</code><br>
+          <code>return_book()</code><br>
+          <code>list_all_circulation()</code>
+        </td>
+        <td>
+          <strong>Circulation & Fine Engine:</strong> Executes ACID transactional book checkout. Enforces 3-book student borrowing limit and verifies stock availability. Decrements stock on issue, increments stock on return, and calculates overdue penalties.
+        </td>
+      </tr>
+      <tr>
+        <td><code>backend/contact.php</code></td>
+        <td>
+          <code>submit</code><br>
+          <code>list</code><br>
+          <code>reply</code><br>
+          <code>delete</code>
+        </td>
+        <td>
+          <strong>Inquiry Manager:</strong> Saves incoming contact messages as <code>'Unread'</code>. Allows librarians to mark messages as <code>'Replied'</code> or delete them permanently.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>B. Frontend Controllers & State Store (<code>/assets/js/</code>)</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 25%;">File Path</th>
+        <th style="width: 25%;">Key Modules</th>
+        <th>Detailed Purpose & Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>assets/js/slms-store.js</code></td>
+        <td>
+          <code>SLMS_STORE</code><br>
+          <code>apiFetch()</code><br>
+          <code>syncWithBackend()</code><br>
+          <code>issueBook()</code><br>
+          <code>returnBook()</code>
+        </td>
+        <td>
+          <strong>Master Client Store & Sync Manager:</strong> Bridges the UI and PHP backend. Sends AJAX requests to PHP endpoints. Automatically synchronizes database records into local memory every 3.5 seconds so all open tabs stay 100% up-to-date with MySQL.
+        </td>
+      </tr>
+      <tr>
+        <td><code>assets/js/auth-session.js</code></td>
+        <td>
+          <code>getCurrentUser()</code><br>
+          <code>setCurrentUser()</code><br>
+          <code>logoutUser()</code><br>
+          <code>updateNavbarAuth()</code>
+        </td>
+        <td>
+          <strong>Session & RBAC Guard:</strong> Tracks logged-in user in <code>localStorage</code>. Dynamically alters the navigation bar (shows "Logged in as Admin" or "Logged in as Student"). Redirects unauthorized students trying to view the Admin panel.
+        </td>
+      </tr>
+      <tr>
+        <td><code>assets/js/main-animations.js</code></td>
+        <td>Interactive UI</td>
+        <td>Handles mobile navigation toggling, modal open/close animations, smooth scrolling, and dynamic statistics counting.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>C. User Interface Pages (<code>/Pages/</code>)</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 25%;">Page File</th>
+        <th style="width: 25%;">Target User</th>
+        <th>Functionality Provided</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>index.php</code></td>
+        <td>Public</td>
+        <td>Root router that immediately redirects visitors to <code>Pages/index.html</code>.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/index.html</code></td>
+        <td>Public / All</td>
+        <td>Main landing page showcasing library highlights, live inventory statistics counters, quick links, and services.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/login.html</code></td>
+        <td>All Users</td>
+        <td>Dual-tab portal for Login and Registration. Validates credentials with PHP backend and routes user to appropriate dashboard.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/catalog.html</code></td>
+        <td>Students & Guests</td>
+        <td>Searchable public catalog. Displays live book cards, available copies badges, genre categories, and ISBN details.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/student-dashboard.html</code></td>
+        <td>Student Role</td>
+        <td>Personal borrow summary. Lists active borrowed books, countdown to 14-day due date, fine notices, and past return history.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/admin-dashboard.html</code></td>
+        <td>Admin / Librarian</td>
+        <td>Master management console: Overview KPI cards, Add/Edit Book modals, Issue Book dialog, Registered Students list, and Contact Messages viewer.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/contect.html</code></td>
+        <td>Public</td>
+        <td>Public inquiry submission form connected directly to <code>backend/contact.php</code>.</td>
+      </tr>
+      <tr>
+        <td><code>Pages/aboutus.html</code> & <code>services.html</code></td>
+        <td>Public</td>
+        <td>Static informational pages detailing library rules, study spaces, research databases, and staff hours.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 4: STEP-BY-STEP FUNCTIONAL WORKFLOWS -->
+  <div class="page-break"></div>
+  <h1>4. Step-by-Step Functional Workflows</h1>
+  <p>
+    This section outlines the exact sequence of events executed across the browser, JavaScript layer, PHP backend, and MySQL database for every critical system operation.
+  </p>
+
+  <div class="workflow-card">
+    <h3>Workflow 1: Student Registration (Signup) Flow</h3>
+    <ol>
+      <li><strong>User Input:</strong> Student enters Full Name, Student ID (e.g. <code>STU108</code>), Email, Department, Academic Year, and Password on <code>Pages/login.html?tab=signup</code>.</li>
+      <li><strong>Client Validation:</strong> <code>handleSignup(event)</code> prevents default form submission and validates required fields and password matching.</li>
+      <li><strong>API Request:</strong> <code>SLMS_STORE.addStudent()</code> sends an HTTP POST request to <code>../backend/auth.php?action=signup</code> with the JSON payload.</li>
+      <li><strong>PHP Controller:</strong> <code>backend/auth.php</code> invokes <code>handle_signup()</code>, parses JSON via <code>get_request_data()</code>, and checks MySQL for duplicate <code>user_id</code> or <code>email</code>.</li>
+      <li><strong>SQL Insertion:</strong> If unique, PHP runs:
+        <pre><code>INSERT INTO users (user_id, name, email, password, role, department, year, created_at)
+VALUES ('STU108', 'Ankit Patel', 'ankit@example.com', 'test@2026', 'student', 'Computer Science', '1st Year', '2026-10-28');</code></pre>
+      </li>
+      <li><strong>Session & Redirect:</strong> PHP returns <code>{ status: true, data: { ... } }</code>. The browser saves the student in <code>localStorage</code> via <code>setCurrentUser()</code> and opens <code>student-dashboard.html</code>.</li>
+    </ol>
+  </div>
+
+  <div class="workflow-card">
+    <h3>Workflow 2: Authentication & Role-Based Access Control (RBAC)</h3>
+    <ol>
+      <li><strong>Submission:</strong> User submits credentials (e.g., <code>ADMIN01</code> and <code>admin</code> or <code>STU106</code> and <code>test@2026</code>).</li>
+      <li><strong>PHP Verification:</strong> <code>handle_login()</code> queries MySQL:
+        <pre><code>SELECT * FROM users WHERE LOWER(user_id) = LOWER(?) OR LOWER(email) = LOWER(?) LIMIT 1</code></pre>
+        Verifies password (plain string comparison or bcrypt <code>password_verify()</code>). Accepts both <code>'admin'</code> and <code>'admin123'</code> for the librarian role.
+      </li>
+      <li><strong>Smart Routing:</strong>
+        <ul>
+          <li>If <code>role === 'admin'</code>: Browser sets session and redirects to <code>Pages/admin-dashboard.html</code>.</li>
+          <li>If <code>role === 'student'</code>: Browser sets session and redirects to <code>Pages/student-dashboard.html</code>.</li>
+        </ul>
+      </li>
+      <li><strong>Route Guard:</strong> If a student attempts to navigate directly to <code>admin-dashboard.html</code>, <code>auth-session.js</code> detects <code>user.role !== 'admin'</code> and redirects them back to their student dashboard.</li>
+    </ol>
+  </div>
+
+  <div class="workflow-card">
+    <h3>Workflow 3: Book Checkout / Issuing Engine</h3>
+    <ol>
+      <li><strong>Admin Request:</strong> Librarian opens "Issue Book" modal on <code>admin-dashboard.html</code>, selects a registered student (e.g. <code>STU101</code>) and an available book.</li>
+      <li><strong>Borrow Limit Verification:</strong> <code>backend/circulation.php</code> counts current active borrowings:
+        <pre><code>SELECT COUNT(*) FROM issued_books WHERE LOWER(user_id) = 'stu101' AND status != 'Returned'</code></pre>
+        If count $\ge 3$, PHP returns error: <em>"Borrow limit exceeded: Student already has 3 active borrowed books."</em>
+      </li>
+      <li><strong>ACID Concurrency Check:</strong> PHP begins transaction (<code>beginTransaction()</code>) and decrements stock atomically:
+        <pre><code>UPDATE books SET available_copies = available_copies - 1 WHERE id = ? AND available_copies > 0</code></pre>
+        If stock was 0, transaction rolls back immediately.
+      </li>
+      <li><strong>14-Day Due Date Calculation:</strong> System computes default return deadline:
+        <pre><code>$dueDate = date('Y-m-d', strtotime('+14 days'));</code></pre>
+      </li>
+      <li><strong>Commit:</strong> Transaction inserts record into <code>issued_books</code> with status <code>'Issued'</code> and commits to MySQL. Both Admin and Student portals reflect updated quantities instantly.</li>
+    </ol>
+  </div>
+
+  <div class="page-break"></div>
+  <div class="workflow-card">
+    <h3>Workflow 4: Book Return & Fine Calculation Engine</h3>
+    <ol>
+      <li><strong>Trigger:</strong> Librarian clicks "Mark as Returned" on circulation table.</li>
+      <li><strong>Fine Computation Algorithm (PHP):</strong> <code>calculate_overdue_fine($due_date, $return_date)</code> computes elapsed days:
+        <pre><code>if ($returnDate > $dueDate) {
+    $overdueDays = $dueDate->diff($returnDate)->days;
+    $fineAmount = $overdueDays * 5.00; // ₹5 per overdue day
+}</code></pre>
+      </li>
+      <li><strong>Stock Restoration:</strong> PHP increments <code>available_copies</code> back in <code>books</code> table:
+        <pre><code>UPDATE books SET available_copies = available_copies + 1 WHERE id = ?;
+UPDATE issued_books SET status = 'Returned', return_date = '2026-10-28', fine = ? WHERE id = ?;</code></pre>
+      </li>
+      <li><strong>Result:</strong> Book returns to catalog stock, student active borrow count decrements, and fines are permanently recorded.</li>
+    </ol>
+  </div>
+
+  <div class="workflow-card">
+    <h3>Workflow 5: Contact Inquiry Submission & Admin Reply</h3>
+    <ol>
+      <li><strong>Public Message:</strong> Visitor submits inquiry on <code>Pages/contect.html</code>.</li>
+      <li><strong>Database Insert:</strong> <code>backend/contact.php?action=submit</code> inserts row into <code>messages</code> table with <code>status = 'Unread'</code>.</li>
+      <li><strong>Admin Panel View:</strong> Admin visits "Contact Messages" tab on <code>admin-dashboard.html</code>.</li>
+      <li><strong>Admin Reply Action:</strong>
+        <ul>
+          <li>Librarian clicks the <strong>"Reply"</strong> button and types response in prompt.</li>
+          <li><code>window.SLMS_STORE.replyMessage(id)</code> sends HTTP POST with JSON <code>{"id": 3}</code> to <code>backend/contact.php?action=reply</code>.</li>
+          <li>PHP executes:
+            <pre><code>UPDATE messages SET status = 'Replied' WHERE id = ?</code></pre>
+          </li>
+          <li>MySQL updates row status from <code>'Unread'</code> to <code>'Replied'</code>. The UI table badge updates to green <strong>Replied</strong> in real-time.</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <!-- SECTION 5: FACULTY PRESENTATION & VIVA CHEAT SHEET -->
+  <h1>5. Faculty Presentation & Viva Cheat Sheet</h1>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 32%;">Possible Faculty Question</th>
+        <th>Ideal Technical Answer to Present</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>"Why did you use PHP instead of Node.js?"</strong></td>
+        <td>PHP is the industry-standard enterprise language for XAMPP / LAMP stack environments. It integrates natively with Apache and MySQL using PDO, requires zero runtime daemon management, and supports ACID database transactions seamlessly.</td>
+      </tr>
+      <tr>
+        <td><strong>"How do you prevent SQL Injection?"</strong></td>
+        <td>All queries across <code>auth.php</code>, <code>books.php</code>, <code>circulation.php</code>, and <code>contact.php</code> utilize <strong>PDO Prepared Statements with Parameterized Placeholders (<code>?</code>)</strong>. No user input is ever concatenated directly into SQL queries.</td>
+      </tr>
+      <tr>
+        <td><strong>"What happens if two students try to borrow the last copy of a book at the same time?"</strong></td>
+        <td>The system executes an atomic transaction with <code>UPDATE books SET available_copies = available_copies - 1 WHERE id = ? AND available_copies > 0</code>. If the row count affected is 0, the second transaction is rolled back with an out-of-stock message, preventing negative stock concurrency bugs.</td>
+      </tr>
+      <tr>
+        <td><strong>"How is the ₹5/day fine calculated?"</strong></td>
+        <td>When a book is issued, PHP calculates a 14-day due date (<code>+14 days</code>). During the return transaction or periodic view, PHP calculates the date interval difference between the due date and the return date. If overdue, it multiplies the elapsed days by ₹5.00.</td>
+      </tr>
+      <tr>
+        <td><strong>"How does the frontend communicate with PHP?"</strong></td>
+        <td>The client uses standard asynchronous JavaScript <code>fetch()</code> requests wrapped inside <code>slms-store.js</code>. Responses are returned as structured JSON headers (<code>Content-Type: application/json</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="text-align: center; margin-top: 20px;">
+    <strong>End of Technical Specification & Workflow Documentation</strong><br>
+    Smart Library Management System &copy; 2026. All rights reserved.
+  </div>
+
+</body>
+</html>

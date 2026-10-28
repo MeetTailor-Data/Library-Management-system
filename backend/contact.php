@@ -5,10 +5,11 @@ require_once __DIR__ . '/db.php';
 $action = $_REQUEST['action'] ?? 'submit';
 
 if ($action === 'submit') {
-    $name = trim($_POST['name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $subject = trim($_POST['subject'] ?? 'General Inquiry');
-    $message = trim($_POST['message'] ?? '');
+    $data = get_request_data();
+    $name = trim($data['name'] ?? '');
+    $email = trim($data['email'] ?? '');
+    $subject = trim($data['subject'] ?? 'General Inquiry');
+    $message = trim($data['message'] ?? '');
 
     if (empty($name) || empty($email) || empty($message)) {
         json_response(false, 'Please fill in all required fields.', null, 400);
@@ -43,24 +44,26 @@ if ($action === 'submit') {
 
     json_response(true, 'Contact messages loaded.', $messages);
 } elseif ($action === 'reply') {
-    $id = (int)($_REQUEST['id'] ?? 0);
+    $data = get_request_data();
+    $id = (int)($data['id'] ?? $_REQUEST['id'] ?? $_GET['id'] ?? 0);
     if ($id <= 0) {
-        json_response(false, 'Valid message ID required.', null, 400);
+        json_response(false, 'Valid message ID required.', null, 200);
     }
     $db = get_db();
     $stmt = $db->prepare("UPDATE messages SET status = 'Replied' WHERE id = ?");
     $stmt->execute([$id]);
-    json_response(true, 'Message marked as Replied.');
+    json_response(true, 'Message marked as Replied.', ['id' => $id, 'status' => 'Replied'], 200);
 } elseif ($action === 'delete') {
-    $id = (int)($_REQUEST['id'] ?? 0);
+    $data = get_request_data();
+    $id = (int)($data['id'] ?? $_REQUEST['id'] ?? $_GET['id'] ?? 0);
     if ($id <= 0) {
-        json_response(false, 'Valid message ID required.', null, 400);
+        json_response(false, 'Valid message ID required.', null, 200);
     }
     $db = get_db();
     $stmt = $db->prepare("DELETE FROM messages WHERE id = ?");
     $stmt->execute([$id]);
-    json_response(true, 'Message deleted successfully.');
+    json_response(true, 'Message deleted successfully.', ['id' => $id], 200);
 } else {
-    json_response(false, 'Invalid action specified.', null, 400);
+    json_response(false, 'Invalid action specified.', null, 200);
 }
 ?>

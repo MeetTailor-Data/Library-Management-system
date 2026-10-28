@@ -316,6 +316,55 @@
     }
   ];
 
+  function getBackendPath(scriptName, queryParams = '') {
+    const isPages = window.location.pathname.includes('/Pages');
+    const base = isPages ? '../backend/' : 'backend/';
+    const q = queryParams ? (queryParams.startsWith('?') ? queryParams : '?' + queryParams) : '';
+    return `${base}${scriptName}${q}`;
+  }
+
+  async function apiFetch(endpointKey, options = {}) {
+    const phpMap = {
+      health: getBackendPath('auth.php', 'action=health'),
+      auth_login: getBackendPath('auth.php', 'action=login'),
+      auth_signup: getBackendPath('auth.php', 'action=signup'),
+      students_list: getBackendPath('auth.php', 'action=list_students'),
+      students_add: getBackendPath('auth.php', 'action=signup'),
+      students_delete: getBackendPath('auth.php', 'action=delete_student'),
+      books_list: getBackendPath('books.php', 'action=list'),
+      books_add: getBackendPath('books.php', 'action=add'),
+      books_edit: getBackendPath('books.php', 'action=edit'),
+      books_delete: getBackendPath('books.php', 'action=delete'),
+      circ_list: getBackendPath('circulation.php', 'action=list_all'),
+      circ_issue: getBackendPath('circulation.php', 'action=issue'),
+      circ_return: getBackendPath('circulation.php', 'action=return'),
+      messages_list: getBackendPath('contact.php', 'action=list'),
+      messages_add: getBackendPath('contact.php', 'action=submit'),
+      messages_reply: getBackendPath('contact.php', 'action=reply'),
+      messages_delete: getBackendPath('contact.php', 'action=delete')
+    };
+
+    const url = phpMap[endpointKey];
+    if (!url) return null;
+
+    const mergedOptions = {
+      ...options,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      }
+    };
+
+    try {
+      const res = await fetch(url, mergedOptions);
+      return res;
+    } catch (e) {
+      console.warn('[SLMS Store] PHP Backend fetch error:', url, e);
+      return null;
+    }
+  }
+
   function initStore() {
     if (!localStorage.getItem(STORAGE_KEYS.BOOKS)) {
       localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(DEFAULT_BOOKS));
@@ -330,7 +379,6 @@
         if (idx === -1) {
           users.push(defUser);
         } else {
-
           if (!users[idx].name || users[idx].name.toLowerCase().startsWith('student stu') || users[idx].name.toUpperCase() === defUser.studentId.toUpperCase()) {
             users[idx].name = defUser.name;
           }
@@ -340,11 +388,6 @@
         }
       });
     }
-    // Explicitly purge test users STU106 & STU107 if previously cached in this browser profile
-    users = users.filter(u => {
-      const sid = (u.studentId || '').toUpperCase();
-      return sid !== 'STU106' && sid !== 'STU107';
-    });
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
 
     let circs = getRaw(STORAGE_KEYS.CIRCULATIONS, []);
@@ -372,12 +415,12 @@
 
   async function syncWithBackend() {
     try {
-      const res = await fetch('/api/health');
-      if (!res.ok) return;
+      const res = await apiFetch('health');
+      if (!res || !res.ok) return;
       SLMS_STORE.isSqlConnected = true;
 
-      const bRes = await fetch('/api/books');
-      if (bRes.ok) {
+      const bRes = await apiFetch('books_list');
+      if (bRes && bRes.ok) {
         const bData = await bRes.json();
         if (bData.status && Array.isArray(bData.data) && bData.data.length > 0) {
           const mappedBooks = bData.data.map(b => ({
@@ -388,44 +431,58 @@
             isbn: b.isbn,
             totalCopies: b.total_copies ?? b.totalCopies ?? 1,
             availableCopies: b.available_copies ?? b.availableCopies ?? 1,
-            image: b.image || '../assets/images/b1.jpg',
+            image: b.image ? (b.image.startsWith('../') || b.image.startsWith('http') ? b.image : '../assets/images/' + b.image) : '../assets/images/b1.jpg',
             description: b.description || ''
           }));
           localStorage.setItem(STORAGE_KEYS.BOOKS, JSON.stringify(mappedBooks));
         }
       }
 
-      const cRes = await fetch('/api/circulation/all');
-      if (cRes.ok) {
+      const cRes = await apiFetch('circ_list');
+      if (cRes && cRes.ok) {
         const cData = await cRes.json();
         if (cData.status && Array.isArray(cData.data)) {
-          localStorage.setItem(STORAGE_KEYS.CIRCULATIONS, JSON.stringify(cData.data));
+          const mappedCircs = cData.data.map(c => ({
+            id: c.id,
+            studentId: c.studentId || c.user_id,
+            studentName: c.studentName || c.student_name,
+            bookTitle: c.bookTitle || c.book_title,
+            isbn: c.isbn,
+            issueDate: c.issueDate || (c.issue_date ? new Date(c.issue_date).toLocaleDateString('en-GB') : ''),
+            dueDate: c.dueDate || (c.due_date ? new Date(c.due_date).toLocaleDateString('en-GB') : ''),
+            returnDate: c.returnDate || (c.return_date ? new Date(c.return_date).toLocaleDateString('en-GB') : null),
+            status: c.status,
+            fine: parseFloat(c.fine || 0)
+          }));
+          localStorage.setItem(STORAGE_KEYS.CIRCULATIONS, JSON.stringify(mappedCircs));
         }
       }
 
-      const uRes = await fetch('/api/users/students');
-      if (uRes.ok) {
+      const uRes = await apiFetch('students_list');
+      if (uRes && uRes.ok) {
         const uData = await uRes.json();
         if (uData.status && Array.isArray(uData.data)) {
           let currentUsers = getRaw(STORAGE_KEYS.USERS, DEFAULT_USERS);
-          const dbStudentIds = new Set(uData.data.map(dbStu => (dbStu.studentId || '').toUpperCase()));
+          const dbStudentIds = new Set(uData.data.map(dbStu => (dbStu.studentId || dbStu.user_id || '').toUpperCase()));
 
           // 1. Authoritative sync: Prune students not in the database response (keeps admin)
           currentUsers = currentUsers.filter(u => {
-            const sid = (u.studentId || '').toUpperCase();
+            const sid = (u.studentId || u.user_id || '').toUpperCase();
             if (u.role === 'admin' || sid === 'ADMIN01') return true;
             return dbStudentIds.has(sid);
           });
 
           // 2. Insert or update students returned by the database
           uData.data.forEach(dbStu => {
-            const idx = currentUsers.findIndex(u => (u.studentId && u.studentId.toUpperCase() === dbStu.studentId.toUpperCase()));
+            const sid = (dbStu.studentId || dbStu.user_id || '').toUpperCase();
+            const idx = currentUsers.findIndex(u => (u.studentId && u.studentId.toUpperCase() === sid) || (u.user_id && u.user_id.toUpperCase() === sid));
             const dept = dbStu.department || (idx !== -1 && currentUsers[idx].department ? currentUsers[idx].department : 'Computer Science');
             const yr = dbStu.year || (idx !== -1 && currentUsers[idx].year ? currentUsers[idx].year : '1st Year');
             if (idx === -1) {
               currentUsers.push({
                 id: dbStu.id,
-                studentId: dbStu.studentId,
+                studentId: sid,
+                user_id: sid,
                 name: dbStu.name,
                 email: dbStu.email,
                 department: dept,
@@ -444,8 +501,8 @@
         }
       }
 
-      const mRes = await fetch('/api/messages');
-      if (mRes.ok) {
+      const mRes = await apiFetch('messages_list');
+      if (mRes && mRes.ok) {
         const mData = await mRes.json();
         if (mData.status && Array.isArray(mData.data)) {
           const mappedMsgs = mData.data.map(m => ({
@@ -517,7 +574,7 @@
       books.unshift(newBook);
       setRaw(STORAGE_KEYS.BOOKS, books);
 
-      fetch('/api/books', {
+      apiFetch('books_add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBook)
@@ -557,22 +614,17 @@
       notifyChange();
 
       // Persist to backend server / database
-      fetch('/api/books', {
-        method: 'PUT',
+      apiFetch('books_edit', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: book.id || 0,
           isbn: book.isbn,
+          total_copies: targetTotal,
           totalCopies: targetTotal,
-          availableCopies: newAvailable
+          available_copies: newAvailable
         })
-      }).then(() => syncWithBackend()).catch(() => {
-        // Fallback for PHP server environments
-        fetch('/backend/books.php?action=edit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `id=${book.id || 0}&isbn=${encodeURIComponent(book.isbn)}&total_copies=${targetTotal}`
-        }).catch(() => {});
-      });
+      }).then(() => syncWithBackend()).catch(() => {});
 
       return {
         success: true,
@@ -594,8 +646,8 @@
         setRaw(STORAGE_KEYS.BOOKS, books);
         notifyChange();
 
-        fetch('/api/books', {
-          method: 'PUT',
+        apiFetch('books_edit', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isbn, ...updatedFields })
         }).then(() => syncWithBackend()).catch(() => {});
@@ -610,8 +662,8 @@
       books = books.filter(b => b.isbn !== isbn);
       setRaw(STORAGE_KEYS.BOOKS, books);
 
-      fetch('/api/books', {
-        method: 'DELETE',
+      apiFetch('books_delete', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isbn })
       }).then(() => syncWithBackend()).catch(() => {});
@@ -631,52 +683,110 @@
       return this.getUsers().find(u => (u.studentId && u.studentId.toUpperCase() === upper) || (u.user_id && u.user_id.toUpperCase() === upper));
     },
 
-    addStudent(stuData) {
+    async addStudent(stuData) {
       const users = this.getUsers();
-      const exists = users.find(u => u.studentId && u.studentId.toUpperCase() === stuData.studentId.trim().toUpperCase());
+      const sid = (stuData.studentId || stuData.user_id || '').trim().toUpperCase();
+      const exists = users.find(u => (u.studentId && u.studentId.toUpperCase() === sid) || (u.user_id && u.user_id.toUpperCase() === sid));
       if (exists) {
-        return { success: false, message: `Student ID "${stuData.studentId}" already exists.` };
+        return { success: false, message: `Student ID "${sid}" already exists.` };
       }
 
       const newId = users.length > 0 ? Math.max(...users.map(u => u.id || 0)) + 1 : 1;
       const newStu = {
         id: newId,
-        studentId: stuData.studentId.trim().toUpperCase(),
+        studentId: sid,
+        user_id: sid,
         name: stuData.name.trim(),
         email: stuData.email.trim(),
         password: stuData.password || 'student123',
+        confirm_password: stuData.confirm_password || stuData.password || 'student123',
         role: 'student',
         department: stuData.department || 'General',
         year: stuData.year || '1st Year',
         phone: stuData.phone || 'N/A',
         status: 'Active'
       };
+
+      try {
+        const res = await apiFetch('students_add', {
+          method: 'POST',
+          body: JSON.stringify(newStu)
+        });
+        if (res) {
+          const resData = await res.json();
+          if (resData && resData.status === false) {
+            return { success: false, message: resData.message || 'Registration failed.' };
+          }
+          if (resData && resData.data && resData.data.id) {
+            newStu.id = resData.data.id;
+          }
+        }
+      } catch (err) {
+        console.error('[SLMS Store] addStudent error:', err);
+      }
+
       users.push(newStu);
       setRaw(STORAGE_KEYS.USERS, users);
-
-      fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newStu)
-      }).then(() => syncWithBackend()).catch(() => {});
+      syncWithBackend();
 
       return { success: true, student: newStu };
     },
 
-    deleteStudent(studentId) {
+    async deleteStudent(studentId) {
       if (!studentId) return;
       const upper = studentId.trim().toUpperCase();
       let users = this.getUsers();
-      users = users.filter(u => (u.studentId && u.studentId.toUpperCase() !== upper));
+      users = users.filter(u => (u.studentId && u.studentId.toUpperCase() !== upper) && (u.user_id && u.user_id.toUpperCase() !== upper));
       setRaw(STORAGE_KEYS.USERS, users);
       notifyChange();
 
-      fetch('/api/users/students?action=delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: upper })
-      }).then(() => syncWithBackend()).catch(() => {});
+      try {
+        await apiFetch('students_delete', {
+          method: 'POST',
+          body: JSON.stringify({ studentId: upper, student_id: upper, user_id: upper })
+        });
+        syncWithBackend();
+      } catch (err) {}
     },
+
+    async loginUser(userId, password) {
+      try {
+        const res = await apiFetch('auth_login', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: userId, userId: userId, password: password })
+        });
+        if (res) {
+          const resData = await res.json();
+          if (resData && resData.status && resData.data) {
+            // Also ensure user is saved in local cache
+            const users = this.getUsers();
+            const sid = (resData.data.studentId || resData.data.user_id || '').toUpperCase();
+            const existingIdx = users.findIndex(u => (u.studentId && u.studentId.toUpperCase() === sid) || (u.user_id && u.user_id.toUpperCase() === sid));
+            if (existingIdx !== -1) {
+              users[existingIdx] = { ...users[existingIdx], ...resData.data, password };
+            } else {
+              users.push({ ...resData.data, password });
+            }
+            setRaw(STORAGE_KEYS.USERS, users);
+
+            return { success: true, user: resData.data };
+          } else {
+            return { success: false, message: (resData && resData.message) ? resData.message : 'Invalid User ID or Password. Please try again.' };
+          }
+        }
+      } catch (e) {
+        console.error('[SLMS Store] loginUser error:', e);
+      }
+
+      // Check local cache if network/PHP offline
+      const stuRecord = this.getStudentById(userId);
+      if (stuRecord && stuRecord.password === password) {
+        return { success: true, user: stuRecord };
+      }
+
+      return { success: false, message: 'Invalid User ID or Password. Please try again.' };
+    },
+
 
     syncNow() {
       return syncWithBackend();
@@ -754,14 +864,16 @@
       circulations.unshift(newCirc);
       setRaw(STORAGE_KEYS.CIRCULATIONS, circulations);
 
-      fetch('/api/circulation/issue', {
+      apiFetch('circ_issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           studentId: stu.studentId,
+          student_id: stu.studentId,
           student_name: stu.name,
           isbn: book.isbn,
-          dueDate: formattedDue
+          dueDate: formattedDue,
+          due_date: formattedDue
         })
       }).then(() => syncWithBackend()).catch(() => {});
 
@@ -798,10 +910,10 @@
 
       notifyChange();
 
-      fetch('/api/circulation/return', {
+      apiFetch('circ_return', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ issue_id: circ.id })
+        body: JSON.stringify({ issue_id: circ.id, issueId: circ.id, id: circ.id })
       }).then(() => syncWithBackend()).catch(() => {});
 
       return { success: true, message: `Book "${circ.bookTitle}" marked as Returned for ${circ.studentName}.` };
@@ -827,47 +939,54 @@
       msgs.unshift(newMsg);
       setRaw(STORAGE_KEYS.MESSAGES, msgs);
 
-      fetch('/api/messages', {
+      apiFetch('messages_add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMsg)
-      }).then(() => syncWithBackend()).catch(() => {
-        const fd = new FormData();
-        fd.append('name', newMsg.name);
-        fd.append('email', newMsg.email);
-        fd.append('subject', newMsg.subject);
-        fd.append('message', newMsg.message);
-        fetch('/backend/contact.php?action=submit', { method: 'POST', body: fd }).catch(() => {});
-      });
+      }).then(() => syncWithBackend()).catch(() => {});
 
       return newMsg;
     },
 
-    replyMessage(id) {
+    async replyMessage(id) {
+      const numId = parseInt(id, 10);
       const msgs = this.getMessages();
-      const idx = msgs.findIndex(m => m.id === id || m.id === parseInt(id, 10));
+      const idx = msgs.findIndex(m => m.id === numId || m.id === id);
       if (idx !== -1) {
         msgs[idx].status = 'Replied';
         setRaw(STORAGE_KEYS.MESSAGES, msgs);
+      }
 
-        fetch('/api/messages?action=reply', {
+      try {
+        await apiFetch('messages_reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id })
-        }).catch(() => {});
+          body: JSON.stringify({ id: numId })
+        });
+        await syncWithBackend();
+      } catch (e) {
+        console.error('[SLMS Store] replyMessage error:', e);
       }
+      return { success: true };
     },
 
-    deleteMessage(id) {
+    async deleteMessage(id) {
+      const numId = parseInt(id, 10);
       let msgs = this.getMessages();
-      msgs = msgs.filter(m => m.id !== id && m.id !== parseInt(id, 10));
+      msgs = msgs.filter(m => m.id !== numId && m.id !== id);
       setRaw(STORAGE_KEYS.MESSAGES, msgs);
 
-      fetch('/api/messages?action=delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      }).catch(() => {});
+      try {
+        await apiFetch('messages_delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: numId })
+        });
+        await syncWithBackend();
+      } catch (e) {
+        console.error('[SLMS Store] deleteMessage error:', e);
+      }
+      return { success: true };
     },
 
     getOverviewStats() {

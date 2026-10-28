@@ -83,13 +83,14 @@ function get_single_book() {
 }
 
 function add_book() {
-    $title = trim($_POST['title'] ?? '');
-    $author = trim($_POST['author'] ?? '');
-    $category = trim($_POST['category'] ?? 'General');
-    $isbn = trim($_POST['isbn'] ?? '');
-    $copies = (int)($_POST['copies'] ?? 1);
-    $description = trim($_POST['description'] ?? 'No description provided.');
-    $image = trim($_POST['image'] ?? 'b1.jpg');
+    $data = get_request_data();
+    $title = trim($data['title'] ?? '');
+    $author = trim($data['author'] ?? '');
+    $category = trim($data['category'] ?? 'General');
+    $isbn = trim($data['isbn'] ?? '');
+    $copies = (int)($data['copies'] ?? $data['totalCopies'] ?? $data['total_copies'] ?? 1);
+    $description = trim($data['description'] ?? 'No description provided.');
+    $image = trim($data['image'] ?? 'b1.jpg');
 
     if (empty($title) || empty($author) || empty($isbn)) {
         json_response(false, 'Title, Author, and ISBN are required.', null, 400);
@@ -123,12 +124,13 @@ function add_book() {
 }
 
 function edit_book() {
-    $id = (int)($_POST['id'] ?? 0);
-    $title = trim($_POST['title'] ?? '');
-    $author = trim($_POST['author'] ?? '');
-    $category = trim($_POST['category'] ?? '');
-    $isbn = trim($_POST['isbn'] ?? '');
-    $totalCopies = isset($_POST['total_copies']) ? (int)$_POST['total_copies'] : null;
+    $data = get_request_data();
+    $id = (int)($data['id'] ?? 0);
+    $title = trim($data['title'] ?? '');
+    $author = trim($data['author'] ?? '');
+    $category = trim($data['category'] ?? '');
+    $isbn = trim($data['isbn'] ?? '');
+    $totalCopies = isset($data['total_copies']) ? (int)$data['total_copies'] : (isset($data['totalCopies']) ? (int)$data['totalCopies'] : null);
 
     $db = get_db();
     if ($id > 0) {
@@ -167,11 +169,20 @@ function edit_book() {
 }
 
 function delete_book() {
-    $id = (int)($_POST['id'] ?? 0);
+    $data = get_request_data();
+    $id = (int)($data['id'] ?? 0);
+    $isbn = trim($data['isbn'] ?? '');
     $db = get_db();
 
-    $stmt = $db->prepare("DELETE FROM books WHERE id = ?");
-    $stmt->execute([$id]);
+    if ($id > 0) {
+        $stmt = $db->prepare("DELETE FROM books WHERE id = ?");
+        $stmt->execute([$id]);
+    } else if (!empty($isbn)) {
+        $stmt = $db->prepare("DELETE FROM books WHERE isbn = ?");
+        $stmt->execute([$isbn]);
+    } else {
+        json_response(false, 'Book ID or ISBN is required.', null, 400);
+    }
 
     if ($stmt->rowCount() > 0) {
         json_response(true, 'Book removed from library catalog.');
@@ -179,4 +190,5 @@ function delete_book() {
         json_response(false, 'Book not found to delete.', null, 404);
     }
 }
+
 ?>

@@ -17,22 +17,22 @@ function getCurrentUser() {
         return { role: 'admin', studentId: 'ADMIN01', name: 'System Librarian' };
       }
       if (urlParams.get('role') === 'student') {
-        const sid = urlParams.get('studentId') || 'STU101';
-        let name = 'John Doe';
+        const sid = (urlParams.get('studentId') || 'STU101').toUpperCase();
+        let name = 'Student ' + sid;
         let dept = 'Computer Science';
-        let yr = '3rd Year';
-        if (sid === 'STU105') {
-          name = 'Meet Tailor';
-          dept = 'Computer Science & Engg';
-          yr = 'Final Year';
-        } else if (sid === 'STU102') {
-          name = 'Emily Clark';
-          dept = 'Information Technology';
-          yr = '2nd Year';
+        let yr = '1st Year';
+        if (window.SLMS_STORE) {
+          const rec = window.SLMS_STORE.getStudentById(sid);
+          if (rec) {
+            name = rec.name;
+            dept = rec.department || dept;
+            yr = rec.year || yr;
+          }
         }
         return { role: 'student', studentId: sid, name: name, department: dept, year: yr };
       }
     } catch (e) {}
+
   }
   const userJson = localStorage.getItem('slms_user');
   if (userJson) {

@@ -355,9 +355,9 @@
     </div>
   </footer>
 
-  <script src="../assets/js/slms-store.js"></script>
-  <script src="../assets/js/auth-session.js"></script>
-  <script src="../assets/js/main-animations.js"></script>
+  <script src="../assets/js/slms-store.js?v=20261027b"></script>
+  <script src="../assets/js/auth-session.js?v=20261027b"></script>
+  <script src="../assets/js/main-animations.js?v=20261027b"></script>
   <script>
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -612,16 +612,16 @@
       }
     }
 
-    function handleAddStudent(e) {
+    async function handleAddStudent(e) {
       e.preventDefault();
-      const studentId = document.getElementById('newStuId').value;
-      const name = document.getElementById('newStuName').value;
-      const email = document.getElementById('newStuEmail').value;
-      const department = document.getElementById('newStuDept').value;
-      const year = document.getElementById('newStuYear').value;
-      const phone = document.getElementById('newStuPhone').value;
+      const studentId = document.getElementById('newStuId').value.trim().toUpperCase();
+      const name = document.getElementById('newStuName').value.trim();
+      const email = document.getElementById('newStuEmail').value.trim();
+      const department = document.getElementById('newStuDept').value.trim();
+      const year = document.getElementById('newStuYear').value.trim();
+      const phone = document.getElementById('newStuPhone').value.trim();
 
-      const res = window.SLMS_STORE.addStudent({
+      const res = await window.SLMS_STORE.addStudent({
         studentId,
         name,
         email,
@@ -641,14 +641,15 @@
       refreshAdminDashboard();
     }
 
-    function deleteStudentAccount(studentId) {
+    async function deleteStudentAccount(studentId) {
       if (!confirm(`Are you sure you want to remove student "${studentId}"? This will delete them from the database across all browsers.`)) return;
       if (window.SLMS_STORE) {
-        window.SLMS_STORE.deleteStudent(studentId);
+        await window.SLMS_STORE.deleteStudent(studentId);
         alert(`Student ${studentId} removed.`);
         refreshAdminDashboard();
       }
     }
+
 
     async function syncStudentsFromCloud(showNotice = false) {
       if (window.SLMS_STORE && window.SLMS_STORE.syncNow) {
@@ -764,18 +765,22 @@
       openEditQuantityModal(isbn);
     }
 
-    function replyAdminMessage(id, email) {
+    async function replyAdminMessage(id, email) {
       const reply = prompt(`Enter your email reply to ${email}:`, 'Thank you for reaching out to the library.');
       if (reply) {
-        window.SLMS_STORE.replyMessage(id);
+        if (window.SLMS_STORE && window.SLMS_STORE.replyMessage) {
+          await window.SLMS_STORE.replyMessage(id);
+        }
         alert(`Reply recorded and message marked as Replied!`);
         refreshAdminDashboard();
       }
     }
 
-    function deleteAdminMessage(id) {
+    async function deleteAdminMessage(id) {
       if (confirm('Delete this message permanently?')) {
-        window.SLMS_STORE.deleteMessage(id);
+        if (window.SLMS_STORE && window.SLMS_STORE.deleteMessage) {
+          await window.SLMS_STORE.deleteMessage(id);
+        }
         refreshAdminDashboard();
       }
     }

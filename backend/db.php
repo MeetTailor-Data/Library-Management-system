@@ -137,10 +137,6 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
             try { $insertUser->execute($u); } catch (Exception $e) {}
         }
     }
-    try {
-        $pdo->exec("DELETE FROM users WHERE UPPER(user_id) IN ('STU106', 'STU107')");
-        $pdo->exec("DELETE FROM issued_books WHERE UPPER(user_id) IN ('STU106', 'STU107')");
-    } catch (Exception $e) {}
 
     $bookCount = (int)$pdo->query("SELECT COUNT(*) FROM books")->fetchColumn();
     if ($bookCount === 0) {
@@ -169,6 +165,15 @@ function initialize_tables(PDO $pdo, $type = 'mysql') {
         $stmt->execute(['STU102', 'Emily Clark', 4, 'Clean Architecture & Code', '978-0134494166', '2026-09-10', '2026-09-24', null, 'Overdue', 40.00]);
         $stmt->execute(['STU103', 'David Miller', 7, 'Sapiens: A Brief History', '978-0062316097', '2026-08-01', '2026-08-15', '2026-08-14', 'Returned', 0.00]);
     }
+}
+
+function get_request_data() {
+    $raw = file_get_contents('php://input');
+    $json = json_decode($raw, true);
+    if (is_array($json)) {
+        return array_merge($_REQUEST, $_POST, $json);
+    }
+    return array_merge($_REQUEST, $_POST);
 }
 
 function json_response($status, $message, $data = null, $code = 200) {

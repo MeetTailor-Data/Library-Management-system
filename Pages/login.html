@@ -125,8 +125,7 @@
 
     <div id="alertBox" style="display: none; padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; text-align: center;"></div>
 
-    <form id="loginForm" class="active" action="../backend/auth.php" method="POST" onsubmit="return handleLogin(event)">
-      <input type="hidden" name="action" value="login">
+    <form id="loginForm" class="active" onsubmit="event.preventDefault(); handleLogin(event);">
       <div class="input-box">
         <input type="text" name="user_id" id="loginUserId" placeholder="Student ID / Admin ID (e.g. STU101 or ADMIN01)" required />
       </div>
@@ -137,8 +136,7 @@
       <button type="button" class="btn guest" onclick="goHome()">Continue as Guest</button>
     </form>
 
-    <form id="signupForm" action="../backend/auth.php" method="POST" onsubmit="return handleSignup(event)">
-      <input type="hidden" name="action" value="signup">
+    <form id="signupForm" onsubmit="event.preventDefault(); handleSignup(event);">
       <div class="input-box">
         <input type="text" name="full_name" id="signupName" placeholder="Full Name (e.g. Rahul Sharma)" required />
       </div>
@@ -188,8 +186,8 @@
     </div>
   </div>
 
-  <script src="../assets/js/slms-store.js"></script>
-  <script src="../assets/js/auth-session.js"></script>
+  <script src="../assets/js/slms-store.js?v=20261027"></script>
+  <script src="../assets/js/auth-session.js?v=20261027"></script>
   <script>
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -197,16 +195,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('tab') === 'signup' || urlParams.get('tab') === 'register' || urlParams.get('view') === 'register') {
           showSignup();
-        }
-        if (!urlParams.has('mode') && !urlParams.has('view')) {
-          const existingUser = getCurrentUser();
-          if (existingUser) {
-            if (existingUser.role === 'admin') {
-              window.location.href = 'admin-dashboard.html';
-            } else {
-              window.location.href = 'student-dashboard.html';
-            }
-          }
         }
       } catch (e) {}
     });
@@ -230,7 +218,8 @@
     function showAlert(msg, isError) {
       const box = document.getElementById('alertBox');
       box.style.display = 'block';
-      box.innerText = msg;
+      const cleanMsg = (typeof msg === 'string' && msg.trim()) ? msg.trim() : (isError ? 'Action failed. Please check your credentials.' : 'Operation completed successfully.');
+      box.innerText = cleanMsg;
       box.style.background = isError ? '#ffebee' : '#e8f5e9';
       box.style.color = isError ? '#c62828' : '#2e7d32';
       box.style.border = isError ? '1px solid #ef9a9a' : '1px solid #a5d6a7';
@@ -240,68 +229,57 @@
       document.getElementById('alertBox').style.display = 'none';
     }
 
-    function handleLogin(e) {
-      e.preventDefault();
-      const id = document.getElementById('loginUserId').value.trim();
-      const pass = document.getElementById('loginPassword').value.trim();
+    async function handleLogin(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const idInput = document.getElementById('loginUserId');
+      const passInput = document.getElementById('loginPassword');
+      const id = idInput ? idInput.value.trim() : '';
+      const pass = passInput ? passInput.value.trim() : '';
 
       if (!id || !pass) {
         showAlert('Please enter your ID and password.', true);
         return false;
       }
 
-      if (id.toUpperCase().includes('ADMIN') || id.toLowerCase() === 'librarian') {
-        const adminUser = {
-          role: 'admin',
-          studentId: id.toUpperCase(),
-          name: 'Library Admin'
-        };
-        setCurrentUser(adminUser);
-        alert('Welcome Admin! Redirecting to Admin Dashboard...');
-        window.location.href = 'admin-dashboard.html';
-        return false;
+      hideAlert();
+
+      // Check database credentials via PHP backend
+      if (window.SLMS_STORE && window.SLMS_STORE.loginUser) {
+        const res = await window.SLMS_STORE.loginUser(id, pass);
+        if (res && res.success && res.user) {
+          const u = res.user;
+          const userObj = {
+            role: u.role || 'student',
+            studentId: u.studentId || u.user_id,
+            name: u.name,
+            email: u.email,
+            department: u.department || 'Computer Science',
+            year: u.year || '1st Year'
+          };
+          setCurrentUser(userObj);
+
+          if (userObj.role === 'admin') {
+            window.location.href = 'admin-dashboard.html';
+          } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectPage = urlParams.get('redirect') || 'student-dashboard.html';
+            window.location.href = redirectPage;
+          }
+          return false;
+        } else {
+          showAlert((res && res.message) ? res.message : 'Invalid User ID or Password. Please try again.', true);
+          return false;
+        }
       }
 
-      const stuRecord = window.SLMS_STORE ? window.SLMS_STORE.getStudentById(id) : null;
-      let stuName = (stuRecord && stuRecord.name && !stuRecord.name.toLowerCase().startsWith('student stu')) ? stuRecord.name : '';
-
-      if (!stuName) {
-        if (id.toUpperCase() === 'STU105') stuName = 'Meet Tailor';
-        else if (id.toUpperCase() === 'STU101') stuName = 'John Doe';
-        else if (id.toUpperCase() === 'STU102') stuName = 'Emily Clark';
-        else if (id.toUpperCase() === 'STU103') stuName = 'David Miller';
-        else if (id.toUpperCase() === 'STU104') stuName = 'Ananya Verma';
-        else stuName = 'Student';
-      }
-
-      if (!stuRecord && window.SLMS_STORE) {
-        window.SLMS_STORE.addStudent({
-          studentId: id.toUpperCase(),
-          name: stuName,
-          email: `${id.toLowerCase()}@library.edu`,
-          department: 'Computer Science',
-          year: '1st Year'
-        });
-      }
-
-      const studentUser = {
-        role: 'student',
-        studentId: id.toUpperCase(),
-        name: stuName
-      };
-      setCurrentUser(studentUser);
-      alert(`Login Successful!\nWelcome back, ${stuName} (${id.toUpperCase()})`);
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const redirectPage = urlParams.get('redirect') || 'student-dashboard.html';
-      window.location.href = redirectPage;
+      showAlert('Invalid User ID or Password. Please try again.', true);
       return false;
     }
 
-    function handleSignup(e) {
-      e.preventDefault();
+    async function handleSignup(e) {
+      if (e && e.preventDefault) e.preventDefault();
       const fullName = document.getElementById('signupName').value.trim();
-      const stuId = document.getElementById('signupId').value.trim();
+      const stuId = document.getElementById('signupId').value.trim().toUpperCase();
       const email = document.getElementById('signupEmail').value.trim();
       const deptSelect = document.getElementById('signupDept');
       const yearSelect = document.getElementById('signupYear');
@@ -309,6 +287,11 @@
       const year = yearSelect ? yearSelect.value : '1st Year';
       const pass = document.getElementById('signupPass').value;
       const confirmPass = document.getElementById('signupConfirmPass').value;
+
+      if (!fullName || !stuId || !email || !pass) {
+        showAlert('Please fill in all required fields.', true);
+        return false;
+      }
 
       if (!department) {
         showAlert('Please select your Department.', true);
@@ -324,35 +307,39 @@
         return false;
       }
 
+      hideAlert();
+
       if (window.SLMS_STORE) {
-        const res = window.SLMS_STORE.addStudent({
-          studentId: stuId.toUpperCase(),
+        const res = await window.SLMS_STORE.addStudent({
+          studentId: stuId,
           name: fullName,
           email: email,
           password: pass,
+          confirm_password: confirmPass,
           department: department,
           year: year
         });
-        if (!res.success) {
-          showAlert(res.message, true);
+        if (!res || !res.success) {
+          showAlert((res && res.message) ? res.message : 'Registration failed. Please try a different ID or email.', true);
           return false;
         }
+
+        const newStudent = {
+          role: 'student',
+          studentId: stuId,
+          name: fullName,
+          email: email,
+          department: department,
+          year: year
+        };
+
+        setCurrentUser(newStudent);
+        alert(`Account Created Successfully!\nWelcome to the Library, ${fullName}!\nStudent ID: ${stuId} | ${department} (${year})`);
+        window.location.href = 'student-dashboard.html';
+        return false;
       }
-
-      const newStudent = {
-        role: 'student',
-        studentId: stuId.toUpperCase(),
-        name: fullName,
-        email: email,
-        department: department,
-        year: year
-      };
-
-      setCurrentUser(newStudent);
-      alert(`Account Created Successfully!\nWelcome to the Library, ${fullName}!\nStudent ID: ${stuId.toUpperCase()} | ${department} (${year})`);
-      window.location.href = 'student-dashboard.html';
-      return false;
     }
+
 
     function goHome() {
       window.location.href = "index.html";

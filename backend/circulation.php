@@ -26,10 +26,13 @@ switch ($action) {
 }
 
 function issue_book() {
-    $studentId = strtoupper(trim($_POST['student_id'] ?? ''));
-    $bookId = (int)($_POST['book_id'] ?? 0);
-    $bookTitle = trim($_POST['book_title'] ?? '');
-    $studentName = trim($_POST['student_name'] ?? ('Student ' . $studentId));
+    $data = get_request_data();
+    $studentId = strtoupper(trim($data['student_id'] ?? $data['studentId'] ?? $data['user_id'] ?? ''));
+    $bookId = (int)($data['book_id'] ?? $data['bookId'] ?? 0);
+    $bookTitle = trim($data['book_title'] ?? $data['bookTitle'] ?? '');
+    $isbn = trim($data['isbn'] ?? '');
+    $studentName = trim($data['student_name'] ?? $data['studentName'] ?? ('Student ' . $studentId));
+    $customDueDate = trim($data['due_date'] ?? $data['dueDate'] ?? '');
 
     if (empty($studentId)) {
         json_response(false, 'Student ID is required.', null, 400);
@@ -40,6 +43,9 @@ function issue_book() {
     if ($bookId > 0) {
         $stmt = $db->prepare("SELECT * FROM books WHERE id = ? LIMIT 1");
         $stmt->execute([$bookId]);
+    } else if (!empty($isbn)) {
+        $stmt = $db->prepare("SELECT * FROM books WHERE isbn = ? LIMIT 1");
+        $stmt->execute([$isbn]);
     } else {
         $stmt = $db->prepare("SELECT * FROM books WHERE LOWER(title) = LOWER(?) LIMIT 1");
         $stmt->execute([$bookTitle]);
@@ -80,7 +86,11 @@ function issue_book() {
         }
 
         $issueDate = date('Y-m-d');
-        $dueDate = date('Y-m-d', strtotime('+14 days'));
+        if (!empty($customDueDate)) {
+            $dueDate = date('Y-m-d', strtotime(str_replace('/', '-', $customDueDate)));
+        } else {
+            $dueDate = date('Y-m-d', strtotime('+14 days'));
+        }
 
         $insertIssueStmt = $db->prepare("INSERT INTO issued_books (user_id, student_name, book_id, book_title, isbn, issue_date, due_date, return_date, status, fine) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'Issued', 0.00)");
         $insertIssueStmt->execute([$studentId, $studentName, $book['id'], $book['title'], $book['isbn'], $issueDate, $dueDate]);
@@ -91,13 +101,19 @@ function issue_book() {
         $newIssue = [
             'id' => $newId,
             'user_id' => $studentId,
+            'studentId' => $studentId,
             'student_name' => $studentName,
+            'studentName' => $studentName,
             'book_id' => (int)$book['id'],
             'book_title' => $book['title'],
+            'bookTitle' => $book['title'],
             'isbn' => $book['isbn'],
             'issue_date' => $issueDate,
+            'issueDate' => date('d/m/Y', strtotime($issueDate)),
             'due_date' => $dueDate,
+            'dueDate' => date('d/m/Y', strtotime($dueDate)),
             'return_date' => null,
+            'returnDate' => null,
             'status' => 'Issued',
             'fine' => 0
         ];
@@ -112,8 +128,10 @@ function issue_book() {
 }
 
 function return_book() {
-    $issueId = (int)($_POST['issue_id'] ?? 0);
+    $data = get_request_data();
+    $issueId = (int)($data['issue_id'] ?? $data['issueId'] ?? $data['circulation_id'] ?? $data['circulationId'] ?? $data['id'] ?? 0);
     $db = get_db();
+
 
     $stmt = $db->prepare("SELECT * FROM issued_books WHERE id = ? AND status != 'Returned' LIMIT 1");
     $stmt->execute([$issueId]);
