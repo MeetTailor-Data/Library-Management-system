@@ -180,3 +180,10 @@ Then navigate to `http://localhost:8000/Pages/index.html`.
 **Meet Tailor**  
 *GitHub Profile:* [@MeetTailor-Data](https://github.com/MeetTailor-Data)  
 *Project Repository:* [Library-Management-system](https://github.com/MeetTailor-Data/Library-Management-system)
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](file:///c:/Users/meett/OneDrive/Desktop/Meet/All-projects/library/LICENSE) - see the [LICENSE](file:///c:/Users/meett/OneDrive/Desktop/Meet/All-projects/library/LICENSE) file for details.
+

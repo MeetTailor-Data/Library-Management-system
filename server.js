@@ -68,7 +68,7 @@ function initDatabase() {
     if (!userCols.includes('year')) {
       db.exec("ALTER TABLE users ADD COLUMN year TEXT DEFAULT '1st Year'");
     }
-  } catch (err) {}
+  } catch (err) { }
 
   try {
     db.prepare("UPDATE users SET department = 'Library Administration', year = 'Staff' WHERE user_id = 'ADMIN01'").run();
@@ -79,7 +79,7 @@ function initDatabase() {
     db.prepare("UPDATE users SET department = 'Computer Science & Engg', year = 'Final Year' WHERE user_id = 'STU105'").run();
     db.prepare("UPDATE users SET department = 'Computer Science' WHERE department IS NULL OR department = ''").run();
     db.prepare("UPDATE users SET year = '1st Year' WHERE year IS NULL OR year = ''").run();
-  } catch (err) {}
+  } catch (err) { }
 
   const coreSeedUsers = [
     ['ADMIN01', 'System Librarian', 'admin@library.com', 'admin123', 'admin', 'Library Administration', 'Staff', '2026-01-01'],
@@ -94,14 +94,14 @@ function initDatabase() {
     if (exists === 0) {
       try {
         db.prepare('INSERT INTO users (user_id, name, email, password, role, department, year, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(...u);
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
   try {
     db.prepare("DELETE FROM users WHERE UPPER(user_id) IN ('STU106', 'STU107')").run();
     db.prepare("DELETE FROM issued_books WHERE UPPER(user_id) IN ('STU106', 'STU107')").run();
-  } catch (e) {}
+  } catch (e) { }
 
   const bookCount = db.prepare('SELECT COUNT(*) as count FROM books').get().count;
   if (bookCount === 0) {

@@ -12,8 +12,8 @@
     "url": "git+https://github.com/MeetTailor-Data/Library-Management-system-UI.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Meet Tailor",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/MeetTailor-Data/Library-Management-system-UI/issues"

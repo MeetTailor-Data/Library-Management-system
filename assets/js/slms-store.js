@@ -1,4 +1,4 @@
-(function(window) {
+(function (window) {
   'use strict';
 
   const STORAGE_KEYS = {
@@ -521,7 +521,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBook)
-      }).then(() => syncWithBackend()).catch(() => {});
+      }).then(() => syncWithBackend()).catch(() => { });
 
       return newBook;
     },
@@ -571,7 +571,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: `id=${book.id || 0}&isbn=${encodeURIComponent(book.isbn)}&total_copies=${targetTotal}`
-        }).catch(() => {});
+        }).catch(() => { });
       });
 
       return {
@@ -598,7 +598,7 @@
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isbn, ...updatedFields })
-        }).then(() => syncWithBackend()).catch(() => {});
+        }).then(() => syncWithBackend()).catch(() => { });
 
         return books[idx];
       }
@@ -614,7 +614,7 @@
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isbn })
-      }).then(() => syncWithBackend()).catch(() => {});
+      }).then(() => syncWithBackend()).catch(() => { });
     },
 
     getUsers() {
@@ -658,7 +658,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newStu)
-      }).then(() => syncWithBackend()).catch(() => {});
+      }).then(() => syncWithBackend()).catch(() => { });
 
       return { success: true, student: newStu };
     },
@@ -675,7 +675,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId: upper })
-      }).then(() => syncWithBackend()).catch(() => {});
+      }).then(() => syncWithBackend()).catch(() => { });
     },
 
     syncNow() {
@@ -763,7 +763,7 @@
           isbn: book.isbn,
           dueDate: formattedDue
         })
-      }).then(() => syncWithBackend()).catch(() => {});
+      }).then(() => syncWithBackend()).catch(() => { });
 
       return {
         success: true,
@@ -802,7 +802,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ issue_id: circ.id })
-      }).then(() => syncWithBackend()).catch(() => {});
+      }).then(() => syncWithBackend()).catch(() => { });
 
       return { success: true, message: `Book "${circ.bookTitle}" marked as Returned for ${circ.studentName}.` };
     },
@@ -837,7 +837,7 @@
         fd.append('email', newMsg.email);
         fd.append('subject', newMsg.subject);
         fd.append('message', newMsg.message);
-        fetch('/backend/contact.php?action=submit', { method: 'POST', body: fd }).catch(() => {});
+        fetch('/backend/contact.php?action=submit', { method: 'POST', body: fd }).catch(() => { });
       });
 
       return newMsg;
@@ -854,7 +854,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
-        }).catch(() => {});
+        }).catch(() => { });
       }
     },
 
@@ -867,7 +867,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
-      }).catch(() => {});
+      }).catch(() => { });
     },
 
     getOverviewStats() {
